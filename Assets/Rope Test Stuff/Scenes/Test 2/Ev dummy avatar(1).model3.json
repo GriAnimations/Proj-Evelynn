@@ -1,0 +1,23 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "Ev dummy avatar(1).moc3",
+		"Textures": [
+			"Ev dummy avatar(1).1024/texture_00.png"
+		],
+		"Physics": "Ev dummy avatar(1).physics3.json",
+		"DisplayInfo": "Ev dummy avatar(1).cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		}
+	]
+}
