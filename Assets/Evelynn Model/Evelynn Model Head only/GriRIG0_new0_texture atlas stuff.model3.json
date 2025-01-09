@@ -1,0 +1,23 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "GriRIG0_new0_texture atlas stuff.moc3",
+		"Textures": [
+			"GriRIG0_new0_texture atlas stuff.4096/texture_00.png"
+		],
+		"Physics": "GriRIG0_new0_texture atlas stuff.physics3.json",
+		"DisplayInfo": "GriRIG0_new0_texture atlas stuff.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}

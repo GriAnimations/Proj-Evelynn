@@ -46,7 +46,7 @@ public class LipSync : MonoBehaviour
 
     private void UpdateMouth(int index)
     {
-        //ResetIndexValue();
+        ResetIndexValue();
         live2DModel.Parameters[index].Value = _info.volume;
     }
     
@@ -62,7 +62,10 @@ public class LipSync : MonoBehaviour
     {
         foreach (var x in mouthIndexList)
         {
-            live2DModel.Parameters[x].Value = 0;
+            if (live2DModel.Parameters[x].Value > 0 && Time.frameCount % 10 == 0)
+            {
+                live2DModel.Parameters[x].Value -= 0.1f;
+            }
         }
     }
 
@@ -70,12 +73,12 @@ public class LipSync : MonoBehaviour
     {
         _correspondingIndex = _info.phoneme switch
         {
-            "A" => 26,
-            "E" => 27,
-            "I" => 28,
-            "O" => 29,
-            "U" => 30,
-            "SH" => 32,
+            "A" => mouthIndexList[0],
+            "E" => mouthIndexList[1],
+            "I" => mouthIndexList[2],
+            "O" => mouthIndexList[3],
+            "U" => mouthIndexList[4],
+            "SH" => mouthIndexList[5],
             _ => _correspondingIndex
         };
     }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Live2D.Cubism.Core;
 using UnityEngine;
+using Random = System.Random;
 
 public class EmotionManager : MonoBehaviour
 {
@@ -40,10 +41,14 @@ public class EmotionManager : MonoBehaviour
         _jsonFile = new JsonReturn(new[]
         {
             new PhraseFacsPair("Phrase 1", new[] {"12E"}),
-            new PhraseFacsPair("Phrase 1", new[] {"12E", "6A", "1C"}),
-            new PhraseFacsPair("Phrase 2", new[] {"1C", "6D"}),
-            new PhraseFacsPair("Phrase 3", new[] {"12B", "4C"}),
-            new PhraseFacsPair("Phrase 4", new[] {"12E", "4E", "1C"})
+            new PhraseFacsPair("Phrase 2", new[] {"12E", "6A", "1C"}),
+            new PhraseFacsPair("Phrase 3", new[] {"1C", "6D"}),
+            new PhraseFacsPair("Phrase 4", new[] {"12B", "4C"}),
+            new PhraseFacsPair("Phrase 5", new[] {"12E", "4E", "1C"}),
+            new PhraseFacsPair("Phrase 6", new[] {"9E", "10D", "17C"}),
+            new PhraseFacsPair("Phrase 7", new[] {"9B", "10B"}),
+            new PhraseFacsPair("Phrase 8", new[] {"15D", "1C"}),
+            new PhraseFacsPair("Phrase 9", new[] {"15B"})
         });
     }
 
@@ -63,17 +68,15 @@ public class EmotionManager : MonoBehaviour
         {
             targetActionUnits[i] = 0;
         }
-        
+
         if (_phrasePairCounter < _jsonFile.PhraseFacsPairs.Length)
         {
             SeparateNumberLetterPairs(_jsonFile.PhraseFacsPairs[_phrasePairCounter].FacsCodes);
             _phrasePairCounter++;
-            //Debug.Log("Emotion Number: " + _phrasePairCounter);
-        }
-        else
-        {
+            
             CheckActionUnitDifference();
         }
+
     }
     
     private void SeparateNumberLetterPairs(string[] input)
@@ -95,18 +98,18 @@ public class EmotionManager : MonoBehaviour
             targetActionUnits[int.Parse(numberPart)] = intensity;
         }
         
-        CheckActionUnitDifference();
+        //CheckActionUnitDifference();
     }
 
     private void IntensityCalculator(string input, out float intensity)
     {
     intensity = input switch
         {
-            "A" => 0.2f,
-            "B" => 0.4f,
-            "C" => 0.6f,
-            "D" => 0.8f,
-            "E" => 1f,
+            "A" => UnityEngine.Random.Range(0.1f, 0.25f),
+            "B" => UnityEngine.Random.Range(0.3f, 0.45f),
+            "C" => UnityEngine.Random.Range(0.5f, 0.65f),
+            "D" => UnityEngine.Random.Range(0.7f, 0.85f),
+            "E" => UnityEngine.Random.Range(0.9f, 1f),
             _ => 0f
         };
     }
@@ -114,6 +117,8 @@ public class EmotionManager : MonoBehaviour
 
     private void CheckActionUnitDifference()
     {
+        blendDuration = UnityEngine.Random.Range(0.7f, 2f);
+        
         for (int i = 0; i < targetActionUnits.Length; i++)
         {
             if (!Mathf.Approximately(targetActionUnits[i], currentActionUnits[i]))
@@ -139,9 +144,14 @@ public class EmotionManager : MonoBehaviour
         {
             elapsedTime += Time.deltaTime;
             var normalizedTime = Mathf.Clamp01(elapsedTime / blendDurationInside);
-            var easedTime = EaseInOutCirc(normalizedTime);
+            //var easedTime = EaseInOutCirc(normalizedTime);
+            //var easedTime = EaseOutBack(normalizedTime);
+            var easedTime = OutBack(normalizedTime);
 
-            var value = Mathf.Lerp(startIntensity, targetIntensity, easedTime);
+            //var value = Mathf.Lerp(startIntensity, targetIntensity, easedTime);
+            
+            var value = startIntensity + (targetIntensity - startIntensity) * easedTime;
+            
             currentActionUnits[actionUnitName] = value;
 
             yield return null;
@@ -150,17 +160,19 @@ public class EmotionManager : MonoBehaviour
 
         currentActionUnits[actionUnitName] = targetIntensity;
     }
-    
-    private float EaseInOutCirc(float x)
+
+    private static float InBack(float t)
     {
-        return x < 0.5f
-            ? (1 - Mathf.Sqrt(1 - Mathf.Pow(2 * x, 2))) / 2
-            : (Mathf.Sqrt(1 - Mathf.Pow(-2 * x + 2, 2)) + 1) / 2;
+        float s = 1.5f;
+        return t * t * ((s + 1) * t - s);
     }
+
+    private static float OutBack(float t) => 1 - InBack(1 - t);
+    
 
     private IEnumerator WaitForNextEmotion()
     {
-        yield return new WaitForSeconds(blendDuration + 1f);
+        yield return new WaitForSeconds(blendDuration + 0.3f);
         
         NewEmotionInput();
     }
@@ -179,11 +191,6 @@ public class EmotionManager : MonoBehaviour
             var index = live2DModel.Parameters.ToList().FindIndex(p => p.Id == "AU" + i);
             if (index == -1) continue;
             live2DModel.Parameters[index].Value = currentActionUnits[i];
-            //if (!Mathf.Approximately(targetActionUnits[i], currentActionUnits[i]))
-            //{
-            //    live2DModel.Parameters[index].Value = currentActionUnits[12];
-            //    //live2DModel.Parameters[index].Value = currentActionUnits[i];
-            //}
         }
     }
 }
