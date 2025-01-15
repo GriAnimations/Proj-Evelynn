@@ -41,14 +41,14 @@ public class EmotionManager : MonoBehaviour
     {
         _coroutines = new Coroutine[30];
         
-        _jsonFile = new JsonReturn(new[]
-        {
-            new PhraseFacsPair("Phrase 1", new[] {"12C"}),
-            new PhraseFacsPair("Phrase 2", new[] {"12A", "6A", "1C"}),
-            new PhraseFacsPair("Phrase 3", new[] {"100Z", "1D", "4C"}),
-            new PhraseFacsPair("Phrase 4", new[] {"1C", "6D"}),
-            new PhraseFacsPair("Phrase 5", new[] {"4D", "15A"})
-        });
+        //_jsonFile = new JsonReturn(new[]
+        //{
+        //    new PhraseFacsPair("Phrase 1", new[] {"12C"}),
+        //    new PhraseFacsPair("Phrase 2", new[] {"12A", "6A", "1C"}),
+        //    new PhraseFacsPair("Phrase 3", new[] {"100Z", "1D", "4C"}),
+        //    new PhraseFacsPair("Phrase 4", new[] {"1C", "6D"}),
+        //    new PhraseFacsPair("Phrase 5", new[] {"4D", "15A"})
+        //});
     }
 
     private void Update()
@@ -57,6 +57,14 @@ public class EmotionManager : MonoBehaviour
         _phrasePairCounter = 0;
         NewEmotionInput();
     }
+
+    public void StartNewEmotion(JsonReturn emotionJson)
+    {
+        _jsonFile = emotionJson;
+        _phrasePairCounter = 0;
+        NewEmotionInput();
+    }
+    
 
     private void NewEmotionInput()
     {
