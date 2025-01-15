@@ -2,38 +2,58 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Live2D.Cubism.Core;
+using LookingStateMachine;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public class LookingStateManager : MonoBehaviour
 {
     LookingBaseState currentState;
-    public Bored _boredState = new Bored();
-    public Attention _attentionState = new Attention();
-    public Distracted _distractedState = new Distracted();
+    public Bored BoredState = new Bored();
+    public Attention AttentionState = new Attention();
+    public Talking TalkingState = new Talking();
+    public Listening ListeningState = new Listening();
+    public Thinking ThinkingState = new Thinking();
     
     public CubismModel live2DModel;
-    
-    public float currentX;
-    public float currentY;
+    [SerializeField] private CurrentEmotionPlayaround playaround;
+    [SerializeField] private EmotionManager emotionManager;
+    [SerializeField] private BlinkingStuff blinkingStuff;
+    [SerializeField] private BodyLanguage bodyLanguage;
+
+    public float dartingSpeedLowerEnd = 0.6f;
+    public float dartingSpeedUpperEnd = 2f;
 
     private bool _blinking = true;
     public float lookingSpeed;
     public bool stationaryEyes;
+
+    private float _currentPointX;
+    private float _currentPointY;
+
+    private float _currentSubX;
+    private float _currentSubY;
+
+    private float _lookPreReCalcX;
+    private float _lookPreReCalcY;
     
     private Coroutine _lookingCoroutine;
 
-    [SerializeField] private float turnSpeed;
-    public bool waitingDone = true;
+    private float _turnSpeed;
+    public bool waitingDone;
     
-    float targetHeadX(float input)
+    private Coroutine _headTurnCoroutine;
+
+    public bool thinking;
+    
+    float TargetHeadX(float input)
     {
         return input switch
         {
             >= -1 and <= 1 => 0,
             < -1 and >= -2 => input + 1,
             > 1 and <= 2 => input - 1,
-            _ => throw new ArgumentOutOfRangeException("Input is out of range (-2 to 2).")
+            _ => throw new ArgumentOutOfRangeException(nameof(input))
         };
     }
 
@@ -41,7 +61,10 @@ public class LookingStateManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        currentState = _boredState;
+        dartingSpeedLowerEnd = 0.5f;
+        dartingSpeedUpperEnd = 1.3f;
+        
+        currentState = AttentionState;
         currentState.EnterState(this);
 
         stationaryEyes = true;
@@ -53,10 +76,30 @@ public class LookingStateManager : MonoBehaviour
     {
         currentState.UpdateState(this);
 
-        if (Input.GetKeyDown(KeyCode.B))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
-            StartCoroutine(HeadTurnTest());
+            SwitchState(AttentionState);
         }
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            SwitchState(BoredState);
+        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            SwitchState(ListeningState);
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SwitchState(ThinkingState);
+        }
+        
+        EyeHeadReCalculator();
+    }
+
+    public void DoAction(LookingBaseState state)
+    {
+        currentState = state;
+        state.DoAction(this);
     }
 
     public void SwitchState(LookingBaseState state)
@@ -105,111 +148,171 @@ public class LookingStateManager : MonoBehaviour
     
     private static float InQuad(float t) => t * t;
 
-    public void ChooseLookPoint(float x, float y)
+    public void ChoosePoint(float x, float y)
     {
         stationaryEyes = false;
         if (_lookingCoroutine != null)
         {
             StopCoroutine(_lookingCoroutine);
         }
-        _lookingCoroutine = StartCoroutine(LerpToLookPoint(x, y));
+        _lookingCoroutine = StartCoroutine(MoveToPoint(x, y));
     }
 
-    private IEnumerator LerpToLookPoint(float x, float y)
+    private IEnumerator MoveToPoint(float x, float y)
     {
         var elapsedTime = 0f;
-        currentX = live2DModel.Parameters[1].Value;
-        currentY = live2DModel.Parameters[2].Value;
+        _currentSubX = _lookPreReCalcX;
+        _currentSubY = _lookPreReCalcY;
+
+        _currentPointX = x;
+        _currentPointY = y;
 
         while (elapsedTime <= lookingSpeed)
         {
             elapsedTime += Time.deltaTime;
             var normalizedTime = Mathf.Clamp01(elapsedTime / lookingSpeed);
             
-            var preValue = InOutCubic(normalizedTime);
+            var preValue = EasingFunctions.InOutCubic(normalizedTime);
 
-            var valueX = Mathf.Lerp(currentX, x, preValue);
-            var valueY = Mathf.Lerp(currentY, y, preValue);
+            var valueX = Mathf.Lerp(_currentSubX, x, preValue);
+            var valueY = Mathf.Lerp(_currentSubY, y, preValue);
             
-            live2DModel.Parameters[1].Value = valueX;
-            live2DModel.Parameters[2].Value = valueY;
+            _lookPreReCalcX = valueX;
+            _lookPreReCalcY = valueY;
             
             yield return null;
         }
 
-        StartCoroutine(HeadTurn());
+        if (_headTurnCoroutine != null)
+        {
+            StopCoroutine(_headTurnCoroutine);
+        }
+        _headTurnCoroutine = StartCoroutine(HeadTurn());
         
         stationaryEyes = true;
+
+        _currentSubX = _lookPreReCalcX;
+        _currentSubY = _lookPreReCalcY;
         
-        currentX = live2DModel.Parameters[1].Value;
-        currentY = live2DModel.Parameters[2].Value;
+        var chillShortly = 0;
         
         while (stationaryEyes)
         {
-            var dartingSpeed = Random.Range(0.8f, 3.5f);
-            
+            var dartingSpeed = Random.Range(dartingSpeedLowerEnd, dartingSpeedUpperEnd);
+            if (dartingSpeed >= 1f && chillShortly >= 2)
+            {
+                ChooseSubPoint(x, y);
+            }
+        
             yield return new WaitForSeconds(dartingSpeed);
-            live2DModel.Parameters[1].Value = currentX + Random.Range(-0.06f, 0.06f);
-            live2DModel.Parameters[2].Value = currentY + Random.Range(-0.06f, 0.06f);
+            _lookPreReCalcX = _currentSubX + Random.Range(-0.07f, 0.07f);
+            _lookPreReCalcY = _currentSubY + Random.Range(-0.07f, 0.07f);
+            
+            chillShortly++;
+            yield return null;
+        }
+    }
+
+    private void ChooseSubPoint(float x, float y)
+    {
+        var subX = x + Random.Range(-0.1f, 0.1f);
+        var subY = y + Random.Range(-0.2f, 0.2f);
+        
+        StartCoroutine(MoveToSubPoint(subX, subY));
+    }
+
+    private IEnumerator MoveToSubPoint(float subX, float subY)
+    {
+        //yield return new WaitForSeconds(2f);
+        
+        var elapsedTime = 0f;
+
+        var preSubX = _currentSubX;
+        var preSubY = _currentSubY;
+
+        while (elapsedTime <= 0.2f)
+        {
+            elapsedTime += Time.deltaTime;
+            var normalizedTime = Mathf.Clamp01(elapsedTime / 0.2f);
+            
+            var preValue = EasingFunctions.InOutCubic(normalizedTime);
+            
+            _currentSubX = Mathf.Lerp(preSubX, subX, preValue);
+            _currentSubY = Mathf.Lerp(preSubY, subY, preValue);
             
             yield return null;
         }
     }
 
-    private static float InCubic(float t) => t * t * t;
-    private static float OutCubic(float t) => 1 - InCubic(1 - t);
-    private static float InOutCubic(float t)
+   
+
+    private void EyeHeadReCalculator()
     {
-        if (t < 0.5) return InCubic(t * 2) / 2;
-        return 1 - InCubic((1 - t) * 2) / 2;
+        live2DModel.Parameters[1].Value = _lookPreReCalcX - live2DModel.Parameters[27].Value;
+        live2DModel.Parameters[2].Value = _lookPreReCalcY - live2DModel.Parameters[28].Value;
     }
 
     private IEnumerator HeadTurn()
     {
-        yield return new WaitForSeconds(Random.Range(1f, 2f));
-        
         var elapsedTime = 0f;
-        var currentHeadRotation = live2DModel.Parameters[27].Value;
         
-        while (elapsedTime <= turnSpeed)
+        var currentHeadRotationX = live2DModel.Parameters[27].Value;
+        //var currentHeadRotationY = live2DModel.Parameters[28].Value;
+        
+        var currentLookTargetX = _currentPointX;
+        //var currentLookTargetY = _currentPointY;
+        _turnSpeed = Random.Range(0.8f, 2.5f);
+        
+        var randomChoose = Random.Range(0, 4);
+        
+        while (elapsedTime <= _turnSpeed)
         {
             elapsedTime += Time.deltaTime;
-            var normalizedTime = Mathf.Clamp01(elapsedTime / turnSpeed);
-            var preValueX = InOutCubic(normalizedTime);
-            var valueX = Mathf.Lerp(currentHeadRotation, targetHeadX(live2DModel.Parameters[1].Value), preValueX);
+            var normalizedTime = Mathf.Clamp01(elapsedTime / _turnSpeed);
+            
+            var preValue = randomChoose switch
+            {
+                0 => EasingFunctions.OutBack(normalizedTime),
+                1 => EasingFunctions.OutQuad(normalizedTime),
+                2 => EasingFunctions.OutCirc(normalizedTime),
+                _ => EasingFunctions.OutQuint(normalizedTime)
+            };
+
+            //var preValue = EasingFunctions.OutQuint(normalizedTime);
+            var valueX = currentHeadRotationX + (TargetHeadX(currentLookTargetX) - currentHeadRotationX) * preValue;
+            //var valueX = Mathf.Lerp(currentHeadRotationX, targetHeadX(currentLookTargetX), preValue);
+            //var valueY = Mathf.Lerp(currentHeadRotationY, targetHeadX(currentLookTargetY), preValue);
 
             live2DModel.Parameters[27].Value = valueX;
+            //live2DModel.Parameters[28].Value = valueY;
 
             yield return null;
         }
     }
-
-
-    private IEnumerator HeadTurnTest()
+    
+    public void StartDistracted()
     {
-        var elapsedTime = 0f;
-        
-        var currentHeadRotation = live2DModel.Parameters[27].Value;
-        float targetRotation;
-        if (currentHeadRotation < 0)
+        StartCoroutine(Distracted());
+    }
+
+    private IEnumerator Distracted()
+    {
+        SwitchState(BoredState);
+        yield return new WaitForSeconds(Random.Range(2.5f, 5f));
+        if (currentState == BoredState)
         {
-            targetRotation = 0;
+            SwitchState(AttentionState);
         }
-        else
+    }
+
+    public void EaseEmotions()
+    {
+        for (var i = 0; i < emotionManager.currentActionUnits.Length; i++)
         {
-            targetRotation = -1;
-        }
-
-        while (elapsedTime <= turnSpeed)
-        {
-            elapsedTime += Time.deltaTime;
-            var normalizedTime = Mathf.Clamp01(elapsedTime / turnSpeed);
-            var preValueX = InOutCubic(normalizedTime);
-            var valueX = Mathf.Lerp(currentHeadRotation, targetRotation, preValueX);
-
-            live2DModel.Parameters[27].Value = valueX;
-
-            yield return null;
+            if (emotionManager.currentActionUnits[i] > 0)
+            {
+                playaround.EaseEmotions(i);
+            }
         }
     }
 
@@ -223,5 +326,21 @@ public class LookingStateManager : MonoBehaviour
         yield return new WaitForSeconds(time);
         waitingDone = true;
     }
-    
+
+    public void StartBlinkingLights()
+    {
+        thinking = true;
+        blinkingStuff.StartInternetBlink();
+        blinkingStuff.StartEyesBlink();
+    }
+
+    public void StartSpecificEmotion(int action, float time, float intenstiy)
+    {
+        playaround.StartPlaySpecificAction(action, time, intenstiy);
+    }
+
+    public void StartSpecificMouth(string action, float time, float intensity)
+    {
+        playaround.StartPLaySpecificMouth(action, time, intensity);
+    }
 }
