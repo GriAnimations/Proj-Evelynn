@@ -15,7 +15,6 @@ namespace LookingStateMachine
             
             looking.ChoosePoint(0, 0);
             looking.thinking = false;
-            Debug.Log("listening");
             
             //tilt head
             //perch up a lil and ease around

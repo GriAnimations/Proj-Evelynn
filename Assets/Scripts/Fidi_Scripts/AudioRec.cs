@@ -228,6 +228,28 @@ public class AudioRec : MonoBehaviour
             {
                 if (Silence)
                 {
+                    while (Input.GetKey(KeyCode.T) && Silence)
+                    {
+                        Silence = false;
+                        OnTalkingDetected?.Invoke();
+                        yield return null;
+                    }
+                }
+                else
+                {
+                    while (!Input.GetKey(KeyCode.T) && !Silence)
+                    {
+                        yield return new WaitForSeconds(silenceDuration);
+                        
+                        Silence = true;
+                        OnSilenceDetected?.Invoke();
+
+                        yield return null;
+                    }
+                }
+                
+                /*if (Silence)
+                {
                     float duration;
                     float startTime = Time.time;
 
@@ -238,15 +260,15 @@ public class AudioRec : MonoBehaviour
                         if (duration > talkDuration)
                         {
                             Silence = false;
-                            /*talkingSamples = audioBuffer.GetRange(audioBuffer.Count - (int)((duration + 0.1f) * sampleRate),
-                                (int)((duration + 0.1f) * sampleRate));*/
+                            //talkingSamples = audioBuffer.GetRange(audioBuffer.Count - (int)((duration + 0.1f) * sampleRate),
+                            //    (int)((duration + 0.1f) * sampleRate));#2#
                             OnTalkingDetected?.Invoke();
                         }
 
                         yield return null;
                     }
-
                 }
+                
                 else
                 {
                     float duration;
@@ -264,7 +286,7 @@ public class AudioRec : MonoBehaviour
 
                         yield return null;
                     }
-                }
+                }*/
             }
 
             yield return null;

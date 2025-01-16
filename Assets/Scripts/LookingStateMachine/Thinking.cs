@@ -20,7 +20,6 @@ namespace LookingStateMachine
             looking.DoAction(looking.ThinkingState);
             
             looking.StartBlinkingLights();
-            Debug.Log("thinking");
         }
 
         public override void UpdateState(LookingStateManager looking)

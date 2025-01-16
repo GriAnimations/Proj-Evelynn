@@ -16,7 +16,6 @@ public class Attention : LookingBaseState
         
         looking.ChoosePoint(Random.Range(-0.1f, 0.1f), Random.Range(-0.3f, 0.3f));
         looking.thinking = false;
-        Debug.Log("attention");
     }
 
     public override void UpdateState(LookingStateManager looking)

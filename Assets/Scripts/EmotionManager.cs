@@ -17,13 +17,11 @@ public class EmotionManager : MonoBehaviour
     
     [SerializeField] private CurrentEmotionPlayaround playaround;
     [SerializeField] private BlinkingStuff eyeStuff;
-    private Coroutine[] _coroutines;
     public bool newEmotion;
 
     private int _phrasePairCounter;
-    
-    //private List<int> _currentActionUnits = new();
-    //private List<int> _targetActionUnits = new();
+    private float _wholeDuration;
+    private string _response;
     
     private JsonReturn _jsonFile;
 
@@ -36,32 +34,26 @@ public class EmotionManager : MonoBehaviour
         public float weight { get; set; } = 0f;
         public float weightVelocity { get; set; } = 0f;
     }
-
-    private void Start()
+    
+    private float CalculateBlendTime(float wholeDuration, string response, string currentPhrase)
     {
-        _coroutines = new Coroutine[30];
+        var totalCharacters = response.Length;
+        var timePerCharacter = wholeDuration / totalCharacters;
+        var phraseStartIndex = response.IndexOf(currentPhrase, StringComparison.Ordinal);
+        var startTime = phraseStartIndex * timePerCharacter;
         
-        //_jsonFile = new JsonReturn(new[]
-        //{
-        //    new PhraseFacsPair("Phrase 1", new[] {"12C"}),
-        //    new PhraseFacsPair("Phrase 2", new[] {"12A", "6A", "1C"}),
-        //    new PhraseFacsPair("Phrase 3", new[] {"100Z", "1D", "4C"}),
-        //    new PhraseFacsPair("Phrase 4", new[] {"1C", "6D"}),
-        //    new PhraseFacsPair("Phrase 5", new[] {"4D", "15A"})
-        //});
+        return startTime;
     }
+    
+    private float _currentBlendTime;
 
-    private void Update()
-    {
-        if (!Input.GetKeyDown(KeyCode.A)) return;
-        _phrasePairCounter = 0;
-        NewEmotionInput();
-    }
-
-    public void StartNewEmotion(JsonReturn emotionJson)
+    public void StartNewEmotion(JsonReturn emotionJson, float wholeDuration, string response)
     {
         _jsonFile = emotionJson;
+        _wholeDuration = wholeDuration;
+        _response = response;
         _phrasePairCounter = 0;
+        
         NewEmotionInput();
     }
     
@@ -79,6 +71,7 @@ public class EmotionManager : MonoBehaviour
 
         if (_phrasePairCounter < _jsonFile.PhraseFacsPairs.Length)
         {
+            _currentBlendTime = CalculateBlendTime(_wholeDuration, _response, _jsonFile.PhraseFacsPairs[_phrasePairCounter].Phrase);
             SeparateNumberLetterPairs(_jsonFile.PhraseFacsPairs[_phrasePairCounter].FacsCodes);
             _phrasePairCounter++;
             
@@ -87,9 +80,9 @@ public class EmotionManager : MonoBehaviour
         else
         {
             newEmotion = false;
+            _currentBlendTime = 0;
             StartCoroutine(PlayOccacionally());
         }
-
     }
     
     private void SeparateNumberLetterPairs(string[] input)
@@ -107,8 +100,6 @@ public class EmotionManager : MonoBehaviour
             }
 
             IntensityCalculator(letter, out var intensity);
-
-            //targetActionUnits[int.Parse(numberPart)] = intensity;
 
             if (int.TryParse(numberPart, out var number) && number is >= 0 and <= 31)
             {
@@ -145,7 +136,7 @@ public class EmotionManager : MonoBehaviour
         {
             if (Mathf.Approximately(targetActionUnits[i], currentActionUnits[i])) continue;
             _blendDuration += UnityEngine.Random.Range(-0.2f, 0.2f);
-            StartCoroutine(BlendEmotions(i, _blendDuration));
+            StartCoroutine(BlendEmotions(i, _currentBlendTime));
         }
 
         StartCoroutine(WaitForNextEmotion());
@@ -162,7 +153,9 @@ public class EmotionManager : MonoBehaviour
             eyeStuff.EyeColourDecider(actionUnitName);
         }
 
-        while (elapsedTime < blendDurationInside)
+        var randomizedBlendDuration = blendDurationInside + UnityEngine.Random.Range(0.1f, 0.3f);
+
+        while (elapsedTime < randomizedBlendDuration)
         {
             elapsedTime += Time.deltaTime;
             var normalizedTime = Mathf.Clamp01(elapsedTime / blendDurationInside);
@@ -199,7 +192,6 @@ public class EmotionManager : MonoBehaviour
             playaround.StartPlaying();
         }
     }
-    
    
     
     private void LateUpdate()

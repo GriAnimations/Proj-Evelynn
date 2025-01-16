@@ -293,7 +293,7 @@ public class ResponseManager : MonoBehaviour
         
         JsonReturn jsonReturn = JasonDecoder.DecodeJason(result);
         
-        emotionManager.StartNewEmotion(jsonReturn);
+        emotionManager.StartNewEmotion(jsonReturn, useThisShit, response);
 
         if (_longAnswer)
         {

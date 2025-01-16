@@ -17,7 +17,6 @@ public class Bored : LookingBaseState
         looking.ChoosePoint(Random.Range(-2f, 2f), Random.Range(-1f, 1f));
         looking.thinking = false;
         looking.EaseEmotions();
-        Debug.Log("bored now");
     }
 
     public override void UpdateState(LookingStateManager looking)
