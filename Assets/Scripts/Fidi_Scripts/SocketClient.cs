@@ -61,7 +61,16 @@ public class SocketClient : MonoBehaviour
     {
         Debug.LogWarning("Connecting Socket...");
         ws = new ClientWebSocket();
-        ws.Options.SetRequestHeader("Authorization", "Bearer " + JsonSecretsReader.GetSecret("apiKey"));
+
+        string secret = JsonSecretsReader.GetSecret("apiKey");
+        
+        if (secret == null)
+        {
+            Debug.LogError("Failed to get secret");
+            return;
+        }
+        
+        ws.Options.SetRequestHeader("Authorization", "Bearer " + secret);
         ws.Options.SetRequestHeader("OpenAI-Beta", "realtime=v1");
 
         await ws.ConnectAsync(uri, CancellationToken.None);
@@ -127,7 +136,9 @@ public class SocketClient : MonoBehaviour
 
     public void UpdateSession()
     {
-        messageQueue.Enqueue(JsonConvert.SerializeObject(new
+        Debug.LogWarning("Updating session...");
+
+        string json = JsonConvert.SerializeObject(new
         {
             type = "session.update",
             session = new
@@ -151,7 +162,11 @@ public class SocketClient : MonoBehaviour
                     silence_duration_ms = silenceDurationMs
                 }*/
             }
-        }));
+        });
+
+        json = json[..^2] + ",\"turn_detection\": null}}";
+        
+        messageQueue.Enqueue(json);
     }
 
     private void OnMessage(string message)
@@ -253,12 +268,12 @@ public class SocketClient : MonoBehaviour
 
     public void CommitAudioData()
     {
-        /*messageQueue.Enqueue(JsonConvert.SerializeObject(
+        messageQueue.Enqueue(JsonConvert.SerializeObject(
             new
             {
                 type = "input_audio_buffer.commit",
             }
-        ));*/
+        ));
         messageQueue.Enqueue(JsonConvert.SerializeObject(
             new
             {

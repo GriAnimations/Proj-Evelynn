@@ -189,7 +189,15 @@ public class ChatClientCombo
 
     public ChatClientCombo(string gptModel)
     {
-        client = new OpenAIClient(JsonSecretsReader.GetSecret("apiKey"))
+        string secret = JsonSecretsReader.GetSecret("apiKey");
+        
+        if (secret == null)
+        {
+            Debug.LogError("No API key found");
+            return;
+        }
+        
+        client = new OpenAIClient(secret)
             .GetChatClient(gptModel);
         id = Guid.NewGuid();
         inUse = false;

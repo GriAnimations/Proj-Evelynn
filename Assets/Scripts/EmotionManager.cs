@@ -46,6 +46,7 @@ public class EmotionManager : MonoBehaviour
     }
     
     private float _currentBlendTime;
+    private float _allBlendTimes;
 
     public void StartNewEmotion(JsonReturn emotionJson, float wholeDuration, string response)
     {
@@ -71,7 +72,8 @@ public class EmotionManager : MonoBehaviour
 
         if (_phrasePairCounter < _jsonFile.PhraseFacsPairs.Length)
         {
-            _currentBlendTime = CalculateBlendTime(_wholeDuration, _response, _jsonFile.PhraseFacsPairs[_phrasePairCounter].Phrase);
+            _currentBlendTime = CalculateBlendTime(_wholeDuration, _response, _jsonFile.PhraseFacsPairs[_phrasePairCounter].Phrase) + _allBlendTimes;
+            _allBlendTimes += _currentBlendTime;
             SeparateNumberLetterPairs(_jsonFile.PhraseFacsPairs[_phrasePairCounter].FacsCodes);
             _phrasePairCounter++;
             
@@ -81,6 +83,7 @@ public class EmotionManager : MonoBehaviour
         {
             newEmotion = false;
             _currentBlendTime = 0;
+            _allBlendTimes = 0;
             StartCoroutine(PlayOccacionally());
         }
     }

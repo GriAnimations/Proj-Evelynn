@@ -12,12 +12,15 @@ using UnityEngine.Windows.Speech;
 public class AudioRec : MonoBehaviour
 {
     AudioClip audioClip;
-    int sampleRate = 24000; // Standard sample rate
+    public int sampleRate = 24000; // Standard sample rate
     int chunkSize = 8192; // You can adjust this as needed for processing
     private string microphoneName;
 
     [Header("Turn detection")] [SerializeField]
     private float threshold = 0.001f;
+
+    public bool manualMicrophone = true;
+
 
     [SerializeField] private float silenceDuration = 1;
     [SerializeField] private float talkDuration = 0.5f;
@@ -53,6 +56,9 @@ public class AudioRec : MonoBehaviour
     public event OnBoolChangeDelegate OnSilenceChange;
 
     [SerializeField] private bool silence = true;
+
+    [SerializeField] public List<float> sentBytes = new();
+
 
     public bool Silence
     {
@@ -122,7 +128,11 @@ public class AudioRec : MonoBehaviour
             }
 
             StartCoroutine(SendAudioChunks());
-            detectNotTalkingCoroutine = StartCoroutine(DetectTalkingAndSilence());
+
+            if (!manualMicrophone)
+            {
+                detectNotTalkingCoroutine = StartCoroutine(DetectTalkingAndSilence());
+            }
         }
         catch (Exception e)
         {
@@ -152,6 +162,8 @@ public class AudioRec : MonoBehaviour
 
     public void StartSendingMode()
     {
+        sentBytes?.Clear();
+        audioBuffer?.Clear();
         sendingMode = true;
     }
 
@@ -201,6 +213,8 @@ public class AudioRec : MonoBehaviour
                         }
                         */
 
+                        sentBytes.AddRange(currentAudioBuffer);
+
                         socketClient.AddAudioToQueue(audioBytes);
                     }
                 }
@@ -228,28 +242,6 @@ public class AudioRec : MonoBehaviour
             {
                 if (Silence)
                 {
-                    while (Input.GetKey(KeyCode.T) && Silence)
-                    {
-                        Silence = false;
-                        OnTalkingDetected?.Invoke();
-                        yield return null;
-                    }
-                }
-                else
-                {
-                    while (!Input.GetKey(KeyCode.T) && !Silence)
-                    {
-                        yield return new WaitForSeconds(silenceDuration);
-                        
-                        Silence = true;
-                        OnSilenceDetected?.Invoke();
-
-                        yield return null;
-                    }
-                }
-                
-                /*if (Silence)
-                {
                     float duration;
                     float startTime = Time.time;
 
@@ -260,15 +252,15 @@ public class AudioRec : MonoBehaviour
                         if (duration > talkDuration)
                         {
                             Silence = false;
-                            //talkingSamples = audioBuffer.GetRange(audioBuffer.Count - (int)((duration + 0.1f) * sampleRate),
-                            //    (int)((duration + 0.1f) * sampleRate));#2#
+                            /*talkingSamples = audioBuffer.GetRange(audioBuffer.Count - (int)((duration + 0.1f) * sampleRate),
+                                (int)((duration + 0.1f) * sampleRate));*/
                             OnTalkingDetected?.Invoke();
                         }
 
                         yield return null;
                     }
                 }
-                
+
                 else
                 {
                     float duration;
@@ -286,7 +278,7 @@ public class AudioRec : MonoBehaviour
 
                         yield return null;
                     }
-                }*/
+                }
             }
 
             yield return null;

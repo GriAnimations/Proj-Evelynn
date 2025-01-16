@@ -88,8 +88,6 @@ public class AudioPlayer : MonoBehaviour
     {
         audioSource.clip = audioClip;
         
-        SaveWav.Save(Guid.NewGuid().ToString(), audioClip);
-        
         audioSource.Play();
         startedPlaying = true;
     }

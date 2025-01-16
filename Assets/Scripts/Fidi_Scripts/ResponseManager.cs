@@ -1,23 +1,30 @@
 ﻿using System;
 using System.Collections;
 using System.Threading.Tasks;
+using Fidi_Scripts;
+using OpenAI.RealtimeConversation;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 
 [RequireComponent(typeof(SocketClient))]
 [RequireComponent(typeof(AudioPlayer))]
 [RequireComponent(typeof(AudioRec))]
 [RequireComponent(typeof(OpenAiConnection))]
+[RequireComponent(typeof(ConversationLogger))]
 public class ResponseManager : MonoBehaviour
-{ 
+{
     private SocketClient socketClient;
-    
+
     [SerializeField] private EmotionManager emotionManager;
-    
+
     private OpenAiConnection openAiConnection;
 
     private AudioPlayer audioPlayer;
     private AudioRec audioRecorder;
+    private ConversationLogger conversationLogger;
+
+    private AudioClip currentClip;
 
     [Header("Variables and Thresholds")] [SerializeField]
     private float longSentenceThreshold = 5;
@@ -25,41 +32,19 @@ public class ResponseManager : MonoBehaviour
     private float currentDuration = 0;
 
     private bool isAudioReady = false;
+    private bool responseReady;
+    private bool agentResponseReady;
 
     private Coroutine initCoroutine;
 
     private bool _longAnswer;
-    
-    [Header("Responses ")]
-    
-    [SerializeField] private string response = "";
-    
+
+    [Header("Responses ")] [SerializeField]
+    private string response = "";
+
     [SerializeField] private string agentResponse = "";
-    
+
     [SerializeField] private string understoodText = "";
-    
-    
-    
-    /*private class SessionHistory
-    {
-    }
-
-    private class Session
-    {
-        string id = Guid.NewGuid().ToString();
-
-
-    }
-
-    private class
-
-
-    private enum Role
-    {
-        User,
-        Agent,
-        Setting
-    }*/
 
     private void Awake()
     {
@@ -67,6 +52,7 @@ public class ResponseManager : MonoBehaviour
         audioPlayer = GetComponent<AudioPlayer>();
         socketClient = GetComponent<SocketClient>();
         openAiConnection = GetComponent<OpenAiConnection>();
+        conversationLogger = GetComponent<ConversationLogger>();
     }
 
     private void Update()
@@ -89,7 +75,22 @@ public class ResponseManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.M))
         {
+            Debug.LogWarning("Microphone started");
             StartMicrophone();
+
+            if (audioRecorder.manualMicrophone)
+            {
+                audioRecorder.StartSendingMode();
+            }
+        }
+
+        if (audioRecorder.manualMicrophone)
+        {
+            if (Input.GetKeyUp(KeyCode.M))
+            {
+                Debug.LogWarning("Microphone stopped");
+                StopMicrophone();
+            }
         }
     }
 
@@ -97,7 +98,8 @@ public class ResponseManager : MonoBehaviour
     private void StartSession()
     {
         StartCoroutine(InitializeSessionsAsync(socketClient.ConnectAsync, socketClient.Initialize, StartListeners));
-        StartCoroutine(InitializeSessions(audioRecorder.Initialize, audioPlayer.Initialize, openAiConnection.Initialize));
+        StartCoroutine(
+            InitializeSessions(audioRecorder.Initialize, audioPlayer.Initialize, openAiConnection.Initialize));
     }
 
     private IEnumerator InitializeSessionsAsync(Func<Task> initFunc, params Func<bool>[] executeAfter)
@@ -121,13 +123,16 @@ public class ResponseManager : MonoBehaviour
                         Debug.LogError("Failed to initialize, Fucking off...");
                         throw new Exception("Failed to initialize");
                     }
+
                     yield return null;
                 }
+
                 break;
             }
 
             Debug.LogError("Failed to initialize, trying again...");
         }
+
         Debug.LogWarning("Initialized");
     }
 
@@ -143,10 +148,33 @@ public class ResponseManager : MonoBehaviour
 
             yield return null;
         }
-        
+
         Debug.LogWarning("Initialized");
     }
 
+    private IEnumerator WaitForAllReady()
+    {
+        Debug.LogWarning("Waiting for all to be ready");
+        while (!(isAudioReady && responseReady && agentResponseReady))
+        {
+            Debug.LogWarning("Audio ready: " + isAudioReady);
+            Debug.LogWarning("Response ready: " + responseReady);
+            Debug.LogWarning("Agent response ready: " + agentResponseReady);
+            yield return new WaitForSeconds(0.4f);
+        }
+
+        isAudioReady = false;
+        responseReady = false;
+        agentResponseReady = false;
+
+        Debug.LogWarning("All ready");
+
+        string userName = "Evelynn";
+
+        int id = conversationLogger.AddMessage(userName, response, agentResponse);
+
+        conversationLogger.SaveWavFile(currentClip, id, userName);
+    }
 
     private void StopSession()
     {
@@ -160,37 +188,46 @@ public class ResponseManager : MonoBehaviour
 
     private bool StartListeners()
     {
+        if (conversationLogger.logging)
+            conversationLogger.StartConversation();
         try
         {
             audioRecorder.OnSilenceDetected += StopMicAndSendData;
             if (audioRecorder.recognizer != null)
                 audioRecorder.recognizer.OnPhraseRecognized += audioRecorder.OnPhraseRecognized;
-            
+
             audioRecorder.OnTalkingDetected += audioRecorder.StartSendingMode;
 
             socketClient.OnTextDoneMessage += SetupText;
-            
-            socketClient.OnTextDoneMessage += (text) =>
+
+            socketClient.OnTextDoneMessage += text =>
             {
                 response = text;
+                responseReady = true;
             };
-            
-            socketClient.OnVoiceTranscriptDoneMessage += (text) =>
+
+            socketClient.OnVoiceTranscriptDoneMessage += text => { understoodText = text; };
+            if (conversationLogger.logging)
             {
-                understoodText = text;
-            };
-            
+                socketClient.OnVoiceTranscriptDoneMessage += OnResponseDone;
+            }
+
+
             socketClient.OnAudioDoneMessage += audioPlayer.SetupAudio;
             socketClient.OnAudioDeltaMessage += audioPlayer.OnAudioDeltaMessage;
 
             audioPlayer.OnAudioReady += OnAudioReady;
+            audioPlayer.OnAudioDone += () => isAudioReady = true;
+            audioPlayer.OnAudioReady += clip => { currentClip = clip; };
+
             audioPlayer.OnAudioDone += OnAudioDone;
 
             openAiConnection.OnJobDone += CalculateFacsStuff;
-            
-            openAiConnection.OnJobDone += (job) =>
+
+            openAiConnection.OnJobDone += job =>
             {
                 agentResponse = job.result;
+                agentResponseReady = true;
             };
         }
         catch (Exception e)
@@ -211,9 +248,16 @@ public class ResponseManager : MonoBehaviour
         socketClient.OnTextDoneMessage -= SetupText;
         socketClient.OnAudioDoneMessage -= audioPlayer.SetupAudio;
         socketClient.OnAudioDeltaMessage -= audioPlayer.OnAudioDeltaMessage;
-        
+
+        if (conversationLogger.logging)
+        {
+            socketClient.OnVoiceTranscriptDoneMessage -= OnResponseDone;
+        }
+
 
         audioPlayer.OnAudioReady -= OnAudioReady;
+
+
         audioPlayer.OnAudioDone -= OnAudioDone;
 
         openAiConnection.OnJobDone -= CalculateFacsStuff;
@@ -233,6 +277,11 @@ public class ResponseManager : MonoBehaviour
         audioRecorder.StartRecordingMode();
     }
 
+    public void StopMicrophone()
+    {
+        StopMicAndSendData();
+    }
+
     private void SetupText(string result)
     {
         Guid resultGuid = Guid.NewGuid();
@@ -250,10 +299,36 @@ public class ResponseManager : MonoBehaviour
         socketClient.CommitAudioData();
     }
 
+    private void OnResponseDone(string text)
+    {
+        if (conversationLogger.started)
+        {
+            Debug.Log("logging");
+            string userName = "User";
+
+            int id = conversationLogger.AddMessage(userName, text);
+
+            AudioClip clip = AudioClip.Create("AssistantAudio", audioRecorder.sentBytes.Count, 1,
+                audioRecorder.sampleRate, false);
+            clip.SetData(audioRecorder.sentBytes.ToArray(), 0);
+
+
+            conversationLogger.SaveWavFile(clip, id, userName);
+
+            audioRecorder.sentBytes?.Clear();
+
+            responseReady = false;
+            agentResponseReady = false;
+            isAudioReady = false;
+
+            StartCoroutine(WaitForAllReady());
+        }
+    }
+
     private void OnAudioReady(AudioClip clip)
     {
         _longAnswer = false;
-        
+
         currentDuration = clip.length;
         if (clip.length > longSentenceThreshold)
         {
@@ -290,9 +365,9 @@ public class ResponseManager : MonoBehaviour
     {
         float useThisShit = currentDuration; //TODO USE THAT SHIT 
         string result = job.result; //TODO USE THIS SHIT AS WELL
-        
+
         JsonReturn jsonReturn = JasonDecoder.DecodeJason(result);
-        
+
         emotionManager.StartNewEmotion(jsonReturn, useThisShit, response);
 
         if (_longAnswer)
@@ -302,7 +377,7 @@ public class ResponseManager : MonoBehaviour
 
         //JasonDecoder.DecodeJason("asd");
         //JsonReturn jsonReturn = JsonUtility.FromJson<JsonReturn>(job.result);
-        
+
         //TODO CALCULATE WHEN WHAT FACS SHOULD BE SHOWN
     }
 }

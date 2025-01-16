@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
+using UnityEngine;
 
 
 public static class JsonSecretsReader
@@ -7,18 +9,27 @@ public static class JsonSecretsReader
 
     public static string GetSecret(string key)
     {
-        if (_secrets != null)
+        try
         {
+            if (_secrets != null)
+            {
+                return _secrets.GetSecret(key);
+            }
+
+            string json = System.IO.File.ReadAllText("secrets.json");
+            _secrets = JsonConvert.DeserializeObject<Secrets>(json);
             return _secrets.GetSecret(key);
         }
-
-        string json = System.IO.File.ReadAllText("secrets.json");
-        _secrets = JsonConvert.DeserializeObject<Secrets>(json);
-        return _secrets.GetSecret(key);
+        catch (Exception e)
+        {
+            Debug.LogError("Error reading secrets: " + e.Message);
+        }
+        
+        return null;
     }
 }
 
-[System.Serializable]
+[Serializable]
 public class Secrets
 {
     public string apiKey;
