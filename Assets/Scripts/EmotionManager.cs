@@ -22,18 +22,10 @@ public class EmotionManager : MonoBehaviour
     private int _phrasePairCounter;
     private float _wholeDuration;
     private string _response;
+
+    private bool _isEasing;
     
     private JsonReturn _jsonFile;
-
-    public class BlendShapeInfo
-    {
-        public string phoneme;
-        public int index = -1;
-        public float maxWeight = 1f;
-
-        public float weight { get; set; } = 0f;
-        public float weightVelocity { get; set; } = 0f;
-    }
     
     private float CalculateBlendTime(float wholeDuration, string response, string currentPhrase)
     {
@@ -47,6 +39,7 @@ public class EmotionManager : MonoBehaviour
     
     private float _currentBlendTime;
     private float _allBlendTimes;
+    private float _randomizedEmotionBlend;
 
     public void StartNewEmotion(JsonReturn emotionJson, float wholeDuration, string response)
     {
@@ -63,6 +56,8 @@ public class EmotionManager : MonoBehaviour
     {
         playaround.StopPlaying();
         newEmotion = true;
+        
+        Debug.Log("new emotions triggered");
         //start it all
         
         for (var i = 0; i < targetActionUnits.Length; i++)
@@ -72,7 +67,7 @@ public class EmotionManager : MonoBehaviour
 
         if (_phrasePairCounter < _jsonFile.PhraseFacsPairs.Length)
         {
-            _currentBlendTime = CalculateBlendTime(_wholeDuration, _response, _jsonFile.PhraseFacsPairs[_phrasePairCounter].Phrase) + _allBlendTimes;
+            _currentBlendTime = CalculateBlendTime(_wholeDuration, _response, _jsonFile.PhraseFacsPairs[_phrasePairCounter].Phrase) - _allBlendTimes;
             _allBlendTimes += _currentBlendTime;
             SeparateNumberLetterPairs(_jsonFile.PhraseFacsPairs[_phrasePairCounter].FacsCodes);
             _phrasePairCounter++;
@@ -84,6 +79,7 @@ public class EmotionManager : MonoBehaviour
             newEmotion = false;
             _currentBlendTime = 0;
             _allBlendTimes = 0;
+            _isEasing = false;
             StartCoroutine(PlayOccacionally());
         }
     }
@@ -95,6 +91,7 @@ public class EmotionManager : MonoBehaviour
             var letter = au.Substring(au.Length - 1);
 
             var numberPart = "";
+            
             var j = 0;
             while (j < au.Length && char.IsDigit(au[j]))
             {
@@ -156,12 +153,12 @@ public class EmotionManager : MonoBehaviour
             eyeStuff.EyeColourDecider(actionUnitName);
         }
 
-        var randomizedBlendDuration = blendDurationInside + UnityEngine.Random.Range(0.1f, 0.3f);
+        _randomizedEmotionBlend = UnityEngine.Random.Range(1f, 2f);
 
-        while (elapsedTime < randomizedBlendDuration)
+        while (elapsedTime <= _randomizedEmotionBlend)
         {
             elapsedTime += Time.deltaTime;
-            var normalizedTime = Mathf.Clamp01(elapsedTime / blendDurationInside);
+            var normalizedTime = Mathf.Clamp01(elapsedTime / _randomizedEmotionBlend);
             var easedTime = OutBack(normalizedTime);
             var value = startIntensity + (targetIntensity - startIntensity) * easedTime;
             currentActionUnits[actionUnitName] = value;
@@ -169,6 +166,18 @@ public class EmotionManager : MonoBehaviour
         }
         
         currentActionUnits[actionUnitName] = targetIntensity;
+
+        while (elapsedTime <= 20f && _isEasing)
+        {
+            if (!_isEasing) break;
+            
+            elapsedTime += Time.deltaTime;
+            var normalizedTime = Mathf.Clamp01(elapsedTime / 20f);
+            var easedTime = EasingFunctions.InOutSine(normalizedTime);
+            var value = Mathf.Lerp(targetIntensity, 0, easedTime);
+            currentActionUnits[actionUnitName] = value;
+            yield return null;
+        }
     }
     
 
@@ -177,7 +186,17 @@ public class EmotionManager : MonoBehaviour
 
     private IEnumerator WaitForNextEmotion()
     {
-        yield return new WaitForSeconds(_blendDuration + 0.3f);
+        Debug.Log(_currentBlendTime);
+        _isEasing = true;
+        if (_randomizedEmotionBlend > _currentBlendTime)
+        {
+            yield return new WaitForSeconds(_randomizedEmotionBlend);
+        }
+        else
+        {
+            yield return new WaitForSeconds(_currentBlendTime);
+        }
+        _isEasing = false;
         
         NewEmotionInput();
     }
