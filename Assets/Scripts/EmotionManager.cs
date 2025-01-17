@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Live2D.Cubism.Core;
 using LookingStateMachine;
 using UnityEngine;
@@ -11,7 +12,6 @@ using Random = System.Random;
 public class EmotionManager : MonoBehaviour
 {
     [SerializeField] private CubismModel live2DModel;
-    private float _blendDuration;
     public float[] currentActionUnits;
     [SerializeField] private float[] targetActionUnits;
     
@@ -31,8 +31,13 @@ public class EmotionManager : MonoBehaviour
     {
         var totalCharacters = response.Length;
         var timePerCharacter = wholeDuration / totalCharacters;
-        var phraseStartIndex = response.IndexOf(currentPhrase, StringComparison.Ordinal);
-        var startTime = phraseStartIndex * timePerCharacter;
+        //var phraseStartIndex = response.IndexOf(currentPhrase, StringComparison.Ordinal);
+        
+        var pattern = $@"\b{Regex.Escape(currentPhrase)}\b";
+        var match = Regex.Match(response, pattern, RegexOptions.IgnoreCase);
+        var phraseIndex = match.Index;
+        
+        var startTime = phraseIndex * timePerCharacter;
         
         return startTime;
     }
@@ -69,6 +74,7 @@ public class EmotionManager : MonoBehaviour
         {
             _currentBlendTime = CalculateBlendTime(_wholeDuration, _response, _jsonFile.PhraseFacsPairs[_phrasePairCounter].Phrase) - _allBlendTimes;
             _allBlendTimes += _currentBlendTime;
+            
             SeparateNumberLetterPairs(_jsonFile.PhraseFacsPairs[_phrasePairCounter].FacsCodes);
             _phrasePairCounter++;
             
@@ -130,19 +136,16 @@ public class EmotionManager : MonoBehaviour
 
     private void CheckActionUnitDifference()
     {
-        _blendDuration = UnityEngine.Random.Range(0.5f, 3f);
-        
         for (var i = 0; i < targetActionUnits.Length; i++)
         {
             if (Mathf.Approximately(targetActionUnits[i], currentActionUnits[i])) continue;
-            _blendDuration += UnityEngine.Random.Range(-0.2f, 0.2f);
-            StartCoroutine(BlendEmotions(i, _currentBlendTime));
+            StartCoroutine(BlendEmotions(i));
         }
 
         StartCoroutine(WaitForNextEmotion());
     }
     
-    private IEnumerator BlendEmotions(int actionUnitName, float blendDurationInside)
+    private IEnumerator BlendEmotions(int actionUnitName)
     {
         var elapsedTime = 0f;
         var startIntensity = currentActionUnits[actionUnitName];
@@ -153,13 +156,13 @@ public class EmotionManager : MonoBehaviour
             eyeStuff.EyeColourDecider(actionUnitName);
         }
 
-        _randomizedEmotionBlend = UnityEngine.Random.Range(1f, 2f);
+        _randomizedEmotionBlend = UnityEngine.Random.Range(0.8f, 1.5f);
 
         while (elapsedTime <= _randomizedEmotionBlend)
         {
             elapsedTime += Time.deltaTime;
             var normalizedTime = Mathf.Clamp01(elapsedTime / _randomizedEmotionBlend);
-            var easedTime = OutBack(normalizedTime);
+            var easedTime = EasingFunctions.OutBack(normalizedTime);
             var value = startIntensity + (targetIntensity - startIntensity) * easedTime;
             currentActionUnits[actionUnitName] = value;
             yield return null;
@@ -180,13 +183,8 @@ public class EmotionManager : MonoBehaviour
         }
     }
     
-
-    private static float OutBack(float t) => 1 - EasingFunctions.InBack(1 - t);
-    
-
     private IEnumerator WaitForNextEmotion()
     {
-        Debug.Log(_currentBlendTime);
         _isEasing = true;
         if (_randomizedEmotionBlend > _currentBlendTime)
         {
