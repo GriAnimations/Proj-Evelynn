@@ -18,6 +18,7 @@ public class EmotionManager : MonoBehaviour
     [SerializeField] private CurrentEmotionPlayaround playaround;
     [SerializeField] private BlinkingStuff eyeStuff;
     public bool newEmotion;
+    public bool talkingLookChange;
 
     private int _phrasePairCounter;
     private float _wholeDuration;
@@ -79,6 +80,8 @@ public class EmotionManager : MonoBehaviour
             _phrasePairCounter++;
             
             CheckActionUnitDifference();
+            
+            talkingLookChange = true;
         }
         else
         {

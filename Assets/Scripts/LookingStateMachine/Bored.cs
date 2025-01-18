@@ -23,12 +23,14 @@ public class Bored : LookingBaseState
     {
         if (!looking.waitingDone) return;
         looking.waitingDone = false;
-        looking.Wait(Random.Range(5f, 15f));
+        looking.Wait(Random.Range(2f, 10f));
         if (_boredCount >= 2)
         {
             looking.EaseEmotions();
         }
         _boredCount++;
+        
+        looking.DoAction(looking.BoredState);
         
         looking.lookingSpeed = Random.Range(0.2f, 0.35f);
         looking.ChoosePoint(Random.Range(-2f, 2f), Random.Range(-1f, 1f));
@@ -36,6 +38,25 @@ public class Bored : LookingBaseState
 
     public override void DoAction(LookingStateManager looking)
     {
-        
+        var randomNumber = Random.Range(0, 5);
+        switch (randomNumber)
+        {
+            case 0:
+                looking.StartSpecificEmotion(4, Random.Range(1f, 4f), Random.Range(0.1f, 0.4f));
+                break;
+            case 1:
+                looking.StartSpecificEmotion(1, Random.Range(1f, 4f), Random.Range(0.1f, 0.4f));
+                looking.StartSpecificEmotion(2, Random.Range(1f, 4f), Random.Range(0.1f, 0.4f));
+                break;
+            case 2:
+                looking.StartSpecificEmotion(6, Random.Range(1f, 4f), Random.Range(0.1f, 0.4f));
+                break;
+            case 3:
+                looking.StartSpecificEmotion(17, Random.Range(1f, 4f), Random.Range(0.1f, 0.4f));
+                break;
+            default:
+                looking.StartSpecificMouth("Mouth_M", Random.Range(1f, 4f), Random.Range(0.1f, 0.4f));
+                break;
+        }
     }
 }

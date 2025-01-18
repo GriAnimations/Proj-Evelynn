@@ -8,6 +8,8 @@ namespace LookingStateMachine
         
         public override void EnterState(LookingStateManager looking)
         {
+            Debug.Log("listening");
+            
             looking.dartingSpeedUpperEnd = 0.5f;
             looking.dartingSpeedLowerEnd = 1.3f;
             

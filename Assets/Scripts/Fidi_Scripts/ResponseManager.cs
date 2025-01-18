@@ -17,6 +17,7 @@ public class ResponseManager : MonoBehaviour
     private SocketClient socketClient;
 
     [SerializeField] private EmotionManager emotionManager;
+    [SerializeField] private LookingStateManager lookingStateManager;
 
     private OpenAiConnection openAiConnection;
 
@@ -275,11 +276,13 @@ public class ResponseManager : MonoBehaviour
     public void StartMicrophone()
     {
         audioRecorder.StartRecordingMode();
+        lookingStateManager.SwitchState(lookingStateManager.ListeningState);
     }
 
     public void StopMicrophone()
     {
         StopMicAndSendData();
+        lookingStateManager.SwitchState(lookingStateManager.ThinkingState);
     }
 
     private void SetupText(string result)
@@ -336,6 +339,7 @@ public class ResponseManager : MonoBehaviour
         }
         else
         {
+            lookingStateManager.SwitchState(lookingStateManager.TalkingState);
             ShortSentence(currentDuration);
         }
     }
@@ -359,6 +363,7 @@ public class ResponseManager : MonoBehaviour
     private void OnAudioDone()
     {
         StartMicrophone();
+        lookingStateManager.SwitchState(lookingStateManager.AttentionState);
     }
 
     private void CalculateFacsStuff((Guid id, string result) job)
@@ -373,6 +378,7 @@ public class ResponseManager : MonoBehaviour
         if (_longAnswer)
         {
             LongSentence(currentDuration);
+            lookingStateManager.SwitchState(lookingStateManager.TalkingState);
         }
 
         //JasonDecoder.DecodeJason("asd");

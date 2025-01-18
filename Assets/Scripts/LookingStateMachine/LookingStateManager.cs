@@ -17,7 +17,7 @@ public class LookingStateManager : MonoBehaviour
     
     public CubismModel live2DModel;
     [SerializeField] private CurrentEmotionPlayaround playaround;
-    [SerializeField] private EmotionManager emotionManager;
+    public EmotionManager emotionManager;
     [SerializeField] private BlinkingStuff blinkingStuff;
     [SerializeField] private BodyLanguage bodyLanguage;
 
@@ -72,27 +72,9 @@ public class LookingStateManager : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         currentState.UpdateState(this);
-
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            SwitchState(AttentionState);
-        }
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            SwitchState(BoredState);
-        }
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            SwitchState(ListeningState);
-        }
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            SwitchState(ThinkingState);
-        }
-        
         EyeHeadReCalculator();
     }
 
@@ -243,9 +225,7 @@ public class LookingStateManager : MonoBehaviour
             yield return null;
         }
     }
-
-   
-
+    
     private void EyeHeadReCalculator()
     {
         live2DModel.Parameters[1].Value = _lookPreReCalcX - live2DModel.Parameters[27].Value;
