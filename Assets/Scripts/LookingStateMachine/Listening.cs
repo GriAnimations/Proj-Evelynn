@@ -15,6 +15,10 @@ namespace LookingStateMachine
             
             looking.lookingSpeed = Random.Range(0.2f, 0.45f);
             
+            looking.StartSpecificBody(45, Random.Range(-0.05f, 0.05f), Random.Range(2f, 5f));
+            looking.StartSpecificBody(46, 0, Random.Range(2f, 5f));
+            looking.StartSpecificBody(29, 0, Random.Range(1f, 2f));
+            
             looking.ChoosePoint(0, 0);
             looking.thinking = false;
             

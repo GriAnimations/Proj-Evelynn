@@ -23,7 +23,12 @@ public class Attention : LookingBaseState
     {
         if (!looking.waitingDone) return;
         looking.waitingDone = false;
-        looking.Wait(Random.Range(5f, 15f));
+        
+        looking.StartSpecificBody(45, Random.Range(-0.05f, 0.05f), Random.Range(2f, 5f));
+        looking.StartSpecificBody(46, 0, Random.Range(2f, 5f));
+        looking.StartSpecificBody(29, 0, Random.Range(1f, 2f));
+        
+        looking.Wait(Random.Range(3f, 13f));
         _boredCounter++;
 
         var distractionChance = Random.Range(1, 3);

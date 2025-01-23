@@ -38,14 +38,34 @@ namespace LookingStateMachine
         private IEnumerator Blinking(CubismRenderer lightSource)
         {
             var currentColour = lightSource.Color;
+            var turnedOff = false;
             while (lookingStateManager.thinking)
             {
                 lightSource.Color = new Color(currentColour.r, currentColour.g, currentColour.b, Random.Range(0.8f, 1.0f));
                 yield return new WaitForSeconds(Random.Range(0.05f, 0.2f));
-                lightSource.Color = new Color(currentColour.r, currentColour.g, currentColour.b, 0.2f);
+                lightSource.Color = new Color(currentColour.r, currentColour.g, currentColour.b, Random.Range(0.1f, 0.35f));
                 yield return new WaitForSeconds(Random.Range(0.05f, 0.1f));
             }
+            
+            var elapsedTime = 0f;
+            var randomTime = Random.Range(2f, 4f);
+            while (elapsedTime <= randomTime)
+            {
+                elapsedTime += Time.deltaTime;
+                var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
+                var alpha = Mathf.Lerp(0.1f, 1f, normalizedTime);
+                
+                if (Random.Range(0, 10) == 0)
+                {
+                    turnedOff = !turnedOff;
+                }
 
+                lightSource.Color = turnedOff ? new Color(currentColour.r, currentColour.g, currentColour.b, alpha) : 
+                    new Color(currentColour.r, currentColour.g, currentColour.b, Random.Range(0.1f, 0.35f));
+                
+                yield return null;
+            }
+            
             lightSource.Color = currentColour;
         }
 

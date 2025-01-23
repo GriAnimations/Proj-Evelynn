@@ -237,11 +237,11 @@ public class LookingStateManager : MonoBehaviour
         var elapsedTime = 0f;
         
         var currentHeadRotationX = live2DModel.Parameters[27].Value;
-        //var currentHeadRotationY = live2DModel.Parameters[28].Value;
+        var currentHeadRotationY = live2DModel.Parameters[28].Value;
         
         var currentLookTargetX = _currentPointX;
-        //var currentLookTargetY = _currentPointY;
-        _turnSpeed = Random.Range(0.8f, 2.5f);
+        var currentLookTargetY = _currentPointY;
+        _turnSpeed = Random.Range(0.6f, 1.2f);
         
         var randomChoose = Random.Range(0, 4);
         
@@ -260,11 +260,12 @@ public class LookingStateManager : MonoBehaviour
 
             //var preValue = EasingFunctions.OutQuint(normalizedTime);
             var valueX = currentHeadRotationX + (TargetHeadX(currentLookTargetX) - currentHeadRotationX) * preValue;
+            var valueY = currentHeadRotationY + (TargetHeadX(currentLookTargetY) - currentHeadRotationY) * preValue;
             //var valueX = Mathf.Lerp(currentHeadRotationX, targetHeadX(currentLookTargetX), preValue);
             //var valueY = Mathf.Lerp(currentHeadRotationY, targetHeadX(currentLookTargetY), preValue);
 
             live2DModel.Parameters[27].Value = valueX;
-            //live2DModel.Parameters[28].Value = valueY;
+            live2DModel.Parameters[28].Value = valueY;
 
             yield return null;
         }
@@ -322,5 +323,15 @@ public class LookingStateManager : MonoBehaviour
     public void StartSpecificMouth(string action, float time, float intensity)
     {
         playaround.StartPLaySpecificMouth(action, time, intensity);
+    }
+
+    public void StartSpecificBody(int index, float target, float speed)
+    {
+        bodyLanguage.BodyPosition(index, target, speed);
+    }
+
+    public void ChangeShockIncrease(float value)
+    {
+        bodyLanguage.shockIncrease += value;
     }
 }

@@ -56,25 +56,14 @@ public class ResponseManager : MonoBehaviour
         conversationLogger = GetComponent<ConversationLogger>();
     }
 
+    private void Start()
+    {
+        StartSession();
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Debug.LogWarning("Session starting");
-            StartSession();
-            Debug.LogWarning("Session started");
-
-            //StartMicrophone();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Debug.LogWarning("Session stopping");
-            StopSession();
-            Debug.LogWarning("Session stopped");
-        }
-
-        if (Input.GetKeyDown(KeyCode.M))
         {
             Debug.LogWarning("Microphone started");
             StartMicrophone();
@@ -87,7 +76,7 @@ public class ResponseManager : MonoBehaviour
 
         if (audioRecorder.manualMicrophone)
         {
-            if (Input.GetKeyUp(KeyCode.M))
+            if (Input.GetKeyUp(KeyCode.Space))
             {
                 Debug.LogWarning("Microphone stopped");
                 StopMicrophone();

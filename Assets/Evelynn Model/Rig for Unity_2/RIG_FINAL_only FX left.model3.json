@@ -1,0 +1,23 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "RIG_FINAL_only FX left.moc3",
+		"Textures": [
+			"RIG_FINAL_only FX left.8192/texture_00.png"
+		],
+		"Physics": "RIG_FINAL_only FX left.physics3.json",
+		"DisplayInfo": "RIG_FINAL_only FX left.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		}
+	]
+}
