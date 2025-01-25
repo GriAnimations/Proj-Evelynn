@@ -113,18 +113,13 @@ public class CurrentEmotionPlayaround : MonoBehaviour
         
         while (elapsedTime <= timeDelay)
         {
-            if (emotionManager.newEmotion || !lookingStateManager.thinking) break;
+            if (emotionManager.newEmotion) break;
             
             elapsedTime += Time.deltaTime;
             var normalizedTime = Mathf.Clamp01(elapsedTime / timeDelay);
             var preValue = EasingFunctions.OutCirc(normalizedTime);
             
             emotionManager.currentActionUnits[action] = Mathf.Lerp(currentValue, nextValue, preValue);
-            
-            if (!lookingStateManager.thinking)
-            {
-                break;
-            }
             
             yield return null;
         }
@@ -162,7 +157,7 @@ public class CurrentEmotionPlayaround : MonoBehaviour
         
         while (elapsedTime <= timeDelay)
         {
-            if (emotionManager.newEmotion || !lookingStateManager.thinking) break;
+            if (emotionManager.newEmotion) break;
             
             elapsedTime += Time.deltaTime;
             var normalizedTime = Mathf.Clamp01(elapsedTime / timeDelay);

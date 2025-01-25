@@ -40,6 +40,8 @@ public class ResponseManager : MonoBehaviour
 
     private bool _longAnswer;
 
+    private bool _firstStart;
+
     [Header("Responses ")] [SerializeField]
     private string response = "";
 
@@ -71,6 +73,12 @@ public class ResponseManager : MonoBehaviour
             if (audioRecorder.manualMicrophone)
             {
                 audioRecorder.StartSendingMode();
+            }
+
+            if (!_firstStart)
+            {
+                _firstStart = true;
+                lookingStateManager.StopSleeping();
             }
         }
 
@@ -265,13 +273,22 @@ public class ResponseManager : MonoBehaviour
     public void StartMicrophone()
     {
         audioRecorder.StartRecordingMode();
-        lookingStateManager.SwitchState(lookingStateManager.ListeningState);
+        
+        if (lookingStateManager.AsleepState.FranticLookAround)
+        {
+            lookingStateManager.SwitchState(lookingStateManager.ListeningState);
+        }
     }
 
     public void StopMicrophone()
     {
         StopMicAndSendData();
-        lookingStateManager.SwitchState(lookingStateManager.ThinkingState);
+        
+        if (lookingStateManager.AsleepState.FranticLookAround)
+        {
+            lookingStateManager.SwitchState(lookingStateManager.ThinkingState);
+        }
+        
     }
 
     private void SetupText(string result)

@@ -23,6 +23,12 @@ namespace LookingStateMachine
         private void Start()
         {
             _originalEyeColor = eyeLeft.Color;
+            internetConnection.Color = new Color(1, 1, 1, 0);
+        }
+
+        public void OriginalColour()
+        {
+            internetConnection.Color = new Color(1, 1, 1, 1);
         }
 
         public void StartInternetBlink()
@@ -60,8 +66,8 @@ namespace LookingStateMachine
                     turnedOff = !turnedOff;
                 }
 
-                lightSource.Color = turnedOff ? new Color(currentColour.r, currentColour.g, currentColour.b, alpha) : 
-                    new Color(currentColour.r, currentColour.g, currentColour.b, Random.Range(0.1f, 0.35f));
+                lightSource.Color = turnedOff ? new Color(currentColour.r, currentColour.g, currentColour.b, Random.Range(0.8f, 1.0f)) : 
+                    new Color(currentColour.r, currentColour.g, currentColour.b, alpha);
                 
                 yield return null;
             }
@@ -110,6 +116,11 @@ namespace LookingStateMachine
             }
             leftEye.Color = currentColour;
             rightEye.Color = currentColour;
+        }
+
+        public void InternetConnectionTurnOn()
+        {
+            
         }
 
 

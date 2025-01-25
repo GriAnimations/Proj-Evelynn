@@ -4,16 +4,18 @@ using System.Collections.Generic;
 using Live2D.Cubism.Core;
 using LookingStateMachine;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class LookingStateManager : MonoBehaviour
 {
-    LookingBaseState currentState;
+    public LookingBaseState currentState;
     public Bored BoredState = new Bored();
     public Attention AttentionState = new Attention();
     public Talking TalkingState = new Talking();
     public Listening ListeningState = new Listening();
     public Thinking ThinkingState = new Thinking();
+    public Asleep AsleepState = new Asleep();
     
     public CubismModel live2DModel;
     [SerializeField] private CurrentEmotionPlayaround playaround;
@@ -45,6 +47,16 @@ public class LookingStateManager : MonoBehaviour
     private Coroutine _headTurnCoroutine;
 
     public bool thinking;
+    public float headYIncrease;
+
+    private float _blinkingReduce;
+
+    private bool _automaticHead;
+
+    float FinalHeadY(float input)
+    {
+        return input + headYIncrease;
+    }
     
     float TargetHeadX(float input)
     {
@@ -63,12 +75,13 @@ public class LookingStateManager : MonoBehaviour
     {
         dartingSpeedLowerEnd = 0.5f;
         dartingSpeedUpperEnd = 1.3f;
+
+        bodyLanguage.breatheIncrease = 2f;
         
-        currentState = AttentionState;
+        currentState = AsleepState;
         currentState.EnterState(this);
 
         stationaryEyes = true;
-        StartCoroutine(Blinking());
     }
 
     // Update is called once per frame
@@ -90,41 +103,53 @@ public class LookingStateManager : MonoBehaviour
         state.EnterState(this);
     }
 
+    public void StopSleeping()
+    {
+        AsleepState.StillAsleep = false;
+        bodyLanguage.breatheIncrease = 0;
+        _blinking = true;
+        live2DModel.Parameters[0].Value = 0;
+        _blinkingReduce = 10f;
+        StartCoroutine(Blinking());
+    }
 
     private IEnumerator Blinking()
     {
-        var blinkCd = Random.Range(2f, 10f);
-        yield return new WaitForSeconds(blinkCd);
-        
-        var elapsedTime = 0f;
-        while (elapsedTime <= 0.04f)
+        while (_blinking)
         {
-            elapsedTime += Time.deltaTime;
-            var normalizedTime = Mathf.Clamp01(elapsedTime / 0.04f);
-            
-            var value = Mathf.Lerp(0, 1, normalizedTime);
-            
-            live2DModel.Parameters[0].Value = value;
-            yield return null;
-        }
+            var blinkCd = Random.Range(2f, 10f);
+            yield return new WaitForSeconds(blinkCd / _blinkingReduce);
         
-        elapsedTime = 0f;
-        while (elapsedTime <= 0.2f)
-        {
-            elapsedTime += Time.deltaTime;
-            var normalizedTime = Mathf.Clamp01(elapsedTime / 0.2f);
+            var elapsedTime = 0f;
+            while (elapsedTime <= 0.04f)
+            {
+                elapsedTime += Time.deltaTime;
+                var normalizedTime = Mathf.Clamp01(elapsedTime / 0.04f);
             
-            var preValue = Mathf.Lerp(1, 0, normalizedTime);
-            var value = InQuad(preValue);
+                var value = Mathf.Lerp(0, 1, normalizedTime);
             
-            live2DModel.Parameters[0].Value = value;
-            yield return null;
-        }
-        live2DModel.Parameters[0].Value = 0;
+                live2DModel.Parameters[0].Value = value;
+                yield return null;
+            }
+        
+            elapsedTime = 0f;
+            while (elapsedTime <= 0.2f)
+            {
+                elapsedTime += Time.deltaTime;
+                var normalizedTime = Mathf.Clamp01(elapsedTime / 0.2f);
+            
+                var preValue = Mathf.Lerp(1, 0, normalizedTime);
+                var value = InQuad(preValue);
+            
+                live2DModel.Parameters[0].Value = value;
+                yield return null;
+            }
+            live2DModel.Parameters[0].Value = 0;
 
-        if (_blinking)
-        {
-            StartCoroutine(Blinking());
+            if (_blinkingReduce > 0)
+            {
+                _blinkingReduce -= 1;
+            }
         }
     }
     
@@ -165,11 +190,14 @@ public class LookingStateManager : MonoBehaviour
             yield return null;
         }
 
-        if (_headTurnCoroutine != null)
+        if (_automaticHead)
         {
-            StopCoroutine(_headTurnCoroutine);
+            if (_headTurnCoroutine != null)
+            {
+                StopCoroutine(_headTurnCoroutine);
+            }
+            _headTurnCoroutine = StartCoroutine(HeadTurn());
         }
-        _headTurnCoroutine = StartCoroutine(HeadTurn());
         
         stationaryEyes = true;
 
@@ -266,6 +294,7 @@ public class LookingStateManager : MonoBehaviour
 
             live2DModel.Parameters[27].Value = valueX;
             live2DModel.Parameters[28].Value = valueY;
+            //live2DModel.Parameters[28].Value = FinalHeadY(valueY);
 
             yield return null;
         }
@@ -297,6 +326,85 @@ public class LookingStateManager : MonoBehaviour
         }
     }
 
+    public void StartBootUpSequence()
+    {
+        StartCoroutine(BootUpSequence());
+    }
+
+    private IEnumerator BootUpSequence()
+    {
+        var currentShock = bodyLanguage.shockIncrease;
+        var currentHeadY = live2DModel.Parameters[28].Value;
+        
+        var elapsedTime = 0f;
+        var randomTime = Random.Range(0.3f, 0.4f);
+        
+        StartSpecificEmotion(4, randomTime, randomTime);
+        blinkingStuff.OriginalColour();
+        
+        while (elapsedTime <= randomTime)
+        {
+            elapsedTime += Time.deltaTime;
+            var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
+            var preValue = EasingFunctions.OutCirc(normalizedTime);
+            
+            bodyLanguage.shockIncrease = Mathf.Lerp(currentShock, -25f, preValue);
+            
+            var headY = Mathf.Lerp(currentHeadY, -0.8f, preValue);
+            live2DModel.Parameters[28].Value = FinalHeadY(headY);
+            
+            yield return null;
+        }
+        
+        elapsedTime = 0f;
+        randomTime = Random.Range(0.5f, 0.8f);
+        
+        currentShock = bodyLanguage.shockIncrease;
+        currentHeadY = live2DModel.Parameters[28].Value;
+        
+        while (elapsedTime <= randomTime)
+        {
+            
+            elapsedTime += Time.deltaTime;
+            var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
+            var preValue = EasingFunctions.OutCirc(normalizedTime);
+            
+            bodyLanguage.shockIncrease = Mathf.Lerp(currentShock, 20f, preValue);
+            
+            var headY = Mathf.Lerp(currentHeadY, 0.8f, preValue);
+            live2DModel.Parameters[28].Value = FinalHeadY(headY);
+            
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.1f);
+        
+        AsleepState.FranticLookAround = true;
+        
+        elapsedTime = 0f;
+        randomTime = Random.Range(1f, 2f);
+        
+        currentShock = bodyLanguage.shockIncrease;
+        currentHeadY = live2DModel.Parameters[28].Value;
+        
+        while (elapsedTime <= randomTime)
+        {
+            elapsedTime += Time.deltaTime;
+            var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
+            var preValue = EasingFunctions.InOutQuad(normalizedTime);
+            
+            bodyLanguage.shockIncrease = Mathf.Lerp(currentShock, 0f, preValue);
+            
+            var headY = Mathf.Lerp(currentHeadY, 0f, preValue);
+            live2DModel.Parameters[28].Value = headY;
+            
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.3f);
+        _automaticHead = true;
+    }
+
     public void Wait(float time)
     {
         StartCoroutine(Waiting(time));
@@ -315,9 +423,9 @@ public class LookingStateManager : MonoBehaviour
         blinkingStuff.StartEyesBlink();
     }
 
-    public void StartSpecificEmotion(int action, float time, float intenstiy)
+    public void StartSpecificEmotion(int action, float time, float intensity)
     {
-        playaround.StartPlaySpecificAction(action, time, intenstiy);
+        playaround.StartPlaySpecificAction(action, time, intensity);
     }
 
     public void StartSpecificMouth(string action, float time, float intensity)

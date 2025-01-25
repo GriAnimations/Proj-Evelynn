@@ -18,12 +18,11 @@ public class BodyLanguage : MonoBehaviour
     public bool breathing;
 
     public float shockIncrease;
+    public float breatheIncrease;
 
     private void Start()
     {
         breathing = true;
-        live2DModel.Parameters[44].Value = -5f;
-
         StartCoroutine(Breathing());
     }
 
@@ -32,8 +31,8 @@ public class BodyLanguage : MonoBehaviour
         while (breathing)
         {
             var breathOut = UnityEngine.Random.Range(-6f, -4f);
-            var breathIn = UnityEngine.Random.Range(6f, 4f);
-            var randomTime = UnityEngine.Random.Range(2f, 4f);
+            var breathIn = UnityEngine.Random.Range(8f, 4f);
+            var randomTime = UnityEngine.Random.Range(2f, 4f) + breatheIncrease;
             
             var elapsedTime = 0f;
             while (elapsedTime <= randomTime)
@@ -42,23 +41,13 @@ public class BodyLanguage : MonoBehaviour
                 var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
                 var easedTime = EasingFunctions.InOutCubic(normalizedTime);
                 var value = Mathf.Lerp(breathOut, breathIn, easedTime);
+                lookingStateManager.headYIncrease = Mathf.Lerp(-0.2f, 0.2f, easedTime);
                 live2DModel.Parameters[44].Value = value + shockIncrease;
-
-                if (Mathf.Abs(shockIncrease) > 0.001f)
-                {
-                    switch (shockIncrease)
-                    {
-                        case < 0:
-                            shockIncrease += 0.001f;
-                            break;
-                        case > 0:
-                            shockIncrease -= 0.001f;
-                            break;
-                    }
-                }
                 
                 yield return null;
             }
+
+            yield return new WaitForSeconds(0.1f);
             
             elapsedTime = 0f;
             while (elapsedTime <= randomTime)
@@ -67,6 +56,7 @@ public class BodyLanguage : MonoBehaviour
                 var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
                 var easedTime = EasingFunctions.InOutCubic(normalizedTime);
                 var value = Mathf.Lerp(breathIn, breathOut, easedTime);
+                lookingStateManager.headYIncrease = Mathf.Lerp(0.2f, -0.2f, easedTime);
                 live2DModel.Parameters[44].Value = value + shockIncrease;
                 
                 yield return null;
@@ -111,7 +101,7 @@ public class BodyLanguage : MonoBehaviour
         {
             elapsedTime += Time.deltaTime;
             var normalizedTime = Mathf.Clamp01(elapsedTime / speed);
-            var easedTime = EasingFunctions.InOutCubic(normalizedTime);
+            var easedTime = EasingFunctions.InOutBack(normalizedTime);
             var value = currentValue + (target - currentValue) * easedTime;
             
             live2DModel.Parameters[index].Value = value;

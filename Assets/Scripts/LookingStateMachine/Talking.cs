@@ -15,6 +15,8 @@ namespace LookingStateMachine
         private float _actionUnit4;
         private float _actionUnit10;
         private float _actionUnit12;
+
+        private bool _randomSwitch;
         
         public override void EnterState(LookingStateManager looking)
         {
@@ -41,41 +43,36 @@ namespace LookingStateMachine
                 
                 looking.emotionManager.talkingLookChange = false;
                 looking.lookingSpeed = Random.Range(0.2f, 0.45f);
-
-                float bodyChange;
+                
                 float randomFactor;
 
                 if (_actionUnit4 >= 0.2f || (_actionUnit1 >= 0.2f && _actionUnit2 >= 0.2f))
                 {
                     SetBounds(0, 0, 0, 0);
                     looking.ChoosePoint(_lowerEndX, _lowerEndY);
-
-                    bodyChange = 0f;
-                    randomFactor = Random.Range(0, 0.15f);
+                    
+                    randomFactor = Random.Range(0, 0.1f);
                 }
                 else if (_actionUnit1 >= 0.5f)
                 {
                     SetBounds(-1.2f, 1.2f, -2f, -0.7f);
                     looking.ChoosePoint(Random.Range(_lowerEndX, _upperEndX), Random.Range(_lowerEndY, _upperEndY));
                     
-                    bodyChange = 0;
-                    randomFactor = Random.Range(0.1f, 0.4f);
+                    randomFactor = Random.Range(0.1f, 0.5f);
                 }
                 else if (_actionUnit12 >= 0.2f || _actionUnit10 >= 0.4f)
                 {
                     SetBounds(-0.2f, 0.2f, -0.3f, 0.3f);
                     looking.ChoosePoint(Random.Range(_lowerEndX, _upperEndX), Random.Range(_lowerEndY, _upperEndY));
                     
-                    bodyChange = 0;
-                    randomFactor = Random.Range(0.1f, 0.2f);
+                    randomFactor = Random.Range(0.1f, 0.3f);
                 }
                 else
                 {
                     SetBounds(-0.4f, 0.4f, -0.4f, 0.4f);
                     looking.ChoosePoint(Random.Range(_lowerEndX, _upperEndX), Random.Range(_lowerEndY, _upperEndY));
                     
-                    bodyChange = 0;
-                    randomFactor = Random.Range(0, 0.15f);
+                    randomFactor = Random.Range(0, 0.6f);
                 }
 
                 void SetBounds(float lowerX, float upperX, float lowerY, float upperY)
@@ -86,14 +83,15 @@ namespace LookingStateMachine
                     _upperEndY = upperY;
                 }
                 
-                looking.StartSpecificBody(45, Random.Range(randomFactor*-1, randomFactor), Random.Range(3f, 6f));
-                looking.StartSpecificBody(46, Random.Range(randomFactor*-1, randomFactor), Random.Range(3f, 6f));
-                looking.StartSpecificBody(29, Random.Range(randomFactor*-1 - 0.4f ,randomFactor + 0.4f ), Random.Range(1f, 3f));
+                looking.StartSpecificBody(45, Random.Range(randomFactor*-1, randomFactor), Random.Range(2f, 4f));
+                looking.StartSpecificBody(46, Random.Range(randomFactor*-1, randomFactor), Random.Range(2f, 5f));
+                looking.StartSpecificBody(29, Random.Range(randomFactor*-1 - 0.1f ,randomFactor + 0.1f ), Random.Range(1f, 3f));
             }
             
             if (!looking.waitingDone) return;
             looking.waitingDone = false;
-            looking.Wait(Random.Range(0.8f, 15f));
+            var randomNumber = Random.Range(0.8f, 3f);
+            looking.Wait(randomNumber);
             
             looking.ChoosePoint(Random.Range(_lowerEndX, _upperEndX), Random.Range(_lowerEndY, _upperEndY));
         }
