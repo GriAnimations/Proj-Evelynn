@@ -5,13 +5,10 @@ namespace LookingStateMachine
 {
     public class Thinking : LookingBaseState
     {
-        private bool _doneThinking;
         private bool _switchAction;
         
         public override void EnterState(LookingStateManager looking)
         {
-            _doneThinking = false;
-            
             looking.dartingSpeedUpperEnd = 0.5f;
             looking.dartingSpeedLowerEnd = 1.3f;
             
@@ -19,6 +16,7 @@ namespace LookingStateMachine
             
             looking.DoAction(looking.ThinkingState);
             
+            looking.ColourChangeWithBlink(new Color(1f, 0.6f, 0.4f,1), 1f, false);
             looking.StartBlinkingLights();
         }
 
@@ -41,7 +39,7 @@ namespace LookingStateMachine
                     
                     looking.lookingSpeed = Random.Range(0.2f, 0.3f);
                     looking.ChoosePoint(Random.Range(0.1f, -0.1f), Random.Range(0.2f, -0.2f));
-                    looking.StartSpecificMouth("Mouth_AH", Random.Range(2f, 2.5f), Random.Range(0.1f, 0.2f));
+                    looking.StartSpecificMouth("Mouth_AH", Random.Range(2f, 2.5f), Random.Range(0.1f, 0.3f));
                     
                     looking.StartCoroutine(WaitForAction(Random.Range(4f, 5f)));
                     break;
@@ -64,7 +62,7 @@ namespace LookingStateMachine
                     looking.lookingSpeed = Random.Range(0.2f, 0.3f);
                     looking.ChoosePoint(ChooseX(), Random.Range(0.8f, 2f));
                     looking.StartSpecificEmotion(6, Random.Range(2f, 2.5f), Random.Range(0.3f, 0.8f));
-                    //looking.StartSpecificMouth("Mouth_M", Random.Range(2f, 3.5f), Random.Range(0.1f, 0.2f));
+                    looking.StartSpecificMouth("Mouth_M", Random.Range(2f, 3.5f), Random.Range(0.1f, 0.3f));
                     
                     looking.StartSpecificBody(29, ChooseX() / 3, Random.Range(2f, 4f));
                     

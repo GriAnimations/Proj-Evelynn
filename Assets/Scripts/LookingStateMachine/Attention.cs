@@ -9,7 +9,6 @@ public class Attention : LookingBaseState
     
     public override void EnterState(LookingStateManager looking)
     {
-        Debug.Log("attention");
         looking.dartingSpeedUpperEnd = 0.5f;
         looking.dartingSpeedLowerEnd = 1.3f;
         
@@ -17,6 +16,12 @@ public class Attention : LookingBaseState
         
         looking.ChoosePoint(Random.Range(-0.1f, 0.1f), Random.Range(-0.3f, 0.3f));
         looking.thinking = false;
+
+        if (!looking.wasJustBored)
+        {
+            looking.ColourChangeWithBlink(new Color(1f, 1f, 1f,1), 1f, false);
+        }
+        looking.wasJustBored = false;
     }
 
     public override void UpdateState(LookingStateManager looking)

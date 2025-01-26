@@ -150,7 +150,10 @@ public class AudioRec : MonoBehaviour
         StopRecordingMode();
         audioBuffer?.Clear();
 
-        StopCoroutine(detectNotTalkingCoroutine);
+        if (detectNotTalkingCoroutine != null)
+        {
+            StopCoroutine(detectNotTalkingCoroutine);
+        }
     }
 
     public void StartRecordingMode()

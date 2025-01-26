@@ -63,9 +63,6 @@ public class EmotionManager : MonoBehaviour
         playaround.StopPlaying();
         newEmotion = true;
         
-        Debug.Log("new emotions triggered");
-        //start it all
-        
         for (var i = 0; i < targetActionUnits.Length; i++)
         {
             targetActionUnits[i] = 0;
@@ -206,13 +203,9 @@ public class EmotionManager : MonoBehaviour
     {
         while (!newEmotion)
         {
-            var rando = UnityEngine.Random.Range(5f, 10f);
-            if (newEmotion)
-            {
-                break;
-            }
-            yield return new WaitForSeconds(rando);
             playaround.StartPlaying();
+            var rando = UnityEngine.Random.Range(5f, 10f);
+            yield return new WaitForSeconds(rando);
         }
     }
    

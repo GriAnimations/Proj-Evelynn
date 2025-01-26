@@ -15,7 +15,9 @@ namespace LookingStateMachine
         
             looking.ChoosePoint(Random.Range(-2f, 2f), Random.Range(-2f, 2f));
             looking.thinking = false;
-            looking.EaseEmotions();
+            looking.EaseEmotions(Random.Range(-0.15f, -0.3f));
+            
+            looking.ColourChangeWithBlink(new Color(0.7f, 0.75f, 1f, 1), 1f, true);
         }
 
         public override void UpdateState(LookingStateManager looking)
@@ -25,7 +27,7 @@ namespace LookingStateMachine
             looking.Wait(Random.Range(2f, 10f));
             if (_boredCount >= 2)
             {
-                looking.EaseEmotions();
+                looking.EaseEmotions(Random.Range(-0.15f, -0.3f));
             }
             _boredCount++;
         
@@ -57,10 +59,14 @@ namespace LookingStateMachine
                 case 3:
                     looking.StartSpecificEmotion(17, Random.Range(1f, 4f), Random.Range(0.1f, 0.4f));
                     looking.StartSpecificBody(29, Random.Range(-0.5f, 0.5f), Random.Range(2f, 3f));
+                    looking.StartSpecificBody(45, Random.Range(-0.1f, 0.2f), Random.Range(2f, 4f));
+                    looking.StartSpecificBody(46, Random.Range(-0.1f, 0.2f), Random.Range(2f, 3f));
                     break;
                 default:
-                    looking.StartSpecificMouth("Mouth_M", Random.Range(1f, 4f), Random.Range(0.1f, 0.4f));
+                    looking.StartSpecificMouth("Mouth_M", Random.Range(1f, 4f), Random.Range(0.1f, 0.5f));
                     looking.StartSpecificBody(29, Random.Range(-1f, 1f), Random.Range(2f, 4f));
+                    looking.StartSpecificBody(45, Random.Range(-0.1f, 0.2f), Random.Range(2f, 4f));
+                    looking.StartSpecificBody(46, Random.Range(-0.1f, 0.2f), Random.Range(2f, 3f));
                     break;
             }
         }

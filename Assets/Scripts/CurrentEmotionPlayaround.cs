@@ -4,6 +4,7 @@ using System.Linq;
 using Live2D.Cubism.Core;
 using LookingStateMachine;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class CurrentEmotionPlayaround : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class CurrentEmotionPlayaround : MonoBehaviour
     [SerializeField] private CubismModel live2DModel;
     [SerializeField] private BlinkingStuff eyeStuff;
     [SerializeField] private LookingStateManager lookingStateManager;
+    
+    private float[] _currentValues = new float[33];
     
     private Coroutine _coroutine;
 
@@ -68,17 +71,17 @@ public class CurrentEmotionPlayaround : MonoBehaviour
         }
     }
 
-    public void EaseEmotions(int currentAction)
+    public void EaseEmotions(int currentAction, float decrease)
     {
-        StartCoroutine(EasingEmotions(currentAction));
+        StartCoroutine(EasingEmotions(currentAction, decrease));
     }
 
-    private IEnumerator EasingEmotions(int currentAction)
+    private IEnumerator EasingEmotions(int currentAction, float decrease)
     {
         var elapsedTime = 0f;
         var timeDelay = Random.Range(2f, 3f);
         var currentValue = emotionManager.currentActionUnits[currentAction];
-        var nextValue = currentValue + Random.Range(-0.2f, -0.4f);
+        var nextValue = currentValue + decrease;
         
         while (elapsedTime <= timeDelay)
         {
@@ -149,11 +152,12 @@ public class CurrentEmotionPlayaround : MonoBehaviour
 
     private IEnumerator PlaySpecificMouth(string action, float time, float intensity)
     {
+        lookingStateManager.mouthStuffOngoing = true;
         var elapsedTime = 0f;
         var timeDelay = time;
         var index = live2DModel.Parameters.ToList().FindIndex(p => p.Id == action);
         var currentValue = emotionManager.currentActionUnits[index];
-        var nextValue = currentValue + intensity;
+        var nextValue = intensity;
         
         while (elapsedTime <= timeDelay)
         {
@@ -181,10 +185,12 @@ public class CurrentEmotionPlayaround : MonoBehaviour
             var normalizedTime = Mathf.Clamp01(elapsedTime / timeDelay);
             var preValue = EasingFunctions.InOutBack(normalizedTime);
 
-            live2DModel.Parameters[index].Value = nextValue + (currentValue - nextValue) * preValue;
+            live2DModel.Parameters[index].Value = nextValue + (0 - nextValue) * preValue;
             
             yield return null;
         }
+
+        yield return null;
+        lookingStateManager.mouthStuffOngoing = false;
     }
-    
 }

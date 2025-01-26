@@ -20,8 +20,6 @@ namespace LookingStateMachine
         
         public override void EnterState(LookingStateManager looking)
         {
-            Debug.Log("talking");
-            
             looking.dartingSpeedUpperEnd = 0.5f;
             looking.dartingSpeedLowerEnd = 1.3f;
 
@@ -29,6 +27,8 @@ namespace LookingStateMachine
             
             looking.lookingSpeed = Random.Range(0.2f, 0.45f);
             looking.ChoosePoint(0, 0);
+            
+            looking.ColourChangeWithBlink(new Color(0.4f, 1f, 0.6f, 1), 1f, false);
         }
 
         public override void UpdateState(LookingStateManager looking)
@@ -66,6 +66,12 @@ namespace LookingStateMachine
                     looking.ChoosePoint(Random.Range(_lowerEndX, _upperEndX), Random.Range(_lowerEndY, _upperEndY));
                     
                     randomFactor = Random.Range(0.1f, 0.3f);
+                    
+                    if (randomFactor >= 0.2f && looking.automaticHead)
+                    {
+                        looking.StartNod(Random.Range(0.35f, 0.45f), Random.Range(2, 4));
+                        looking.StartSpecificEmotion(12, Random.Range(1f, 3f), Random.Range(0.1f, 0.4f));
+                    }
                 }
                 else
                 {

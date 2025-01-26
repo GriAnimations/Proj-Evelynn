@@ -11,6 +11,8 @@ namespace LookingStateMachine
         [SerializeField] private CubismRenderer internetConnection;
         [SerializeField] private CubismRenderer eyeLeft;
         [SerializeField] private CubismRenderer eyeRight;
+
+        [SerializeField] private CubismRenderer[] thingsToFadeOut; 
     
         [SerializeField] private LookingStateManager lookingStateManager;
 
@@ -29,11 +31,18 @@ namespace LookingStateMachine
         public void OriginalColour()
         {
             internetConnection.Color = new Color(1, 1, 1, 1);
+            eyeLeft.Color = new Color(1, 1, 1, 1);
+            eyeRight.Color = new Color(1, 1, 1, 1);
+
+            foreach (var i in thingsToFadeOut)
+            {
+                i.Color = new Color(1, 1, 1, 1);
+            }
         }
 
         public void StartInternetBlink()
         {
-            StartCoroutine(Blinking(internetConnection));
+            StartCoroutine(Blinking());
         }
     
         public void StartEyesBlink()
@@ -41,15 +50,14 @@ namespace LookingStateMachine
             StartCoroutine(FadeInOut(eyeLeft, eyeRight));
         }
 
-        private IEnumerator Blinking(CubismRenderer lightSource)
+        private IEnumerator Blinking()
         {
-            var currentColour = lightSource.Color;
             var turnedOff = false;
             while (lookingStateManager.thinking)
             {
-                lightSource.Color = new Color(currentColour.r, currentColour.g, currentColour.b, Random.Range(0.8f, 1.0f));
+                internetConnection.Color = new Color(internetConnection.Color.r, internetConnection.Color.g, internetConnection.Color.b, Random.Range(0.8f, 1.0f));
                 yield return new WaitForSeconds(Random.Range(0.05f, 0.2f));
-                lightSource.Color = new Color(currentColour.r, currentColour.g, currentColour.b, Random.Range(0.1f, 0.35f));
+                internetConnection.Color = new Color(internetConnection.Color.r, internetConnection.Color.g, internetConnection.Color.b, Random.Range(0.1f, 0.35f));
                 yield return new WaitForSeconds(Random.Range(0.05f, 0.1f));
             }
             
@@ -66,13 +74,100 @@ namespace LookingStateMachine
                     turnedOff = !turnedOff;
                 }
 
-                lightSource.Color = turnedOff ? new Color(currentColour.r, currentColour.g, currentColour.b, Random.Range(0.8f, 1.0f)) : 
-                    new Color(currentColour.r, currentColour.g, currentColour.b, alpha);
+                internetConnection.Color = turnedOff ? new Color(internetConnection.Color.r, internetConnection.Color.g, internetConnection.Color.b, Random.Range(0.8f, 1.0f)) : 
+                    new Color(internetConnection.Color.r, internetConnection.Color.g, internetConnection.Color.b, alpha);
                 
                 yield return null;
             }
             
-            lightSource.Color = currentColour;
+            internetConnection.Color = new Color(internetConnection.Color.r, internetConnection.Color.g, internetConnection.Color.b, 1);
+        }
+
+        private IEnumerator ShortBlink(float duration)
+        {
+            var turnedOff = false;
+            
+            var elapsedTime = 0f;
+            while (elapsedTime <= duration)
+            {
+                elapsedTime += Time.deltaTime;
+                
+                if (Random.Range(0, 10) == 0)
+                {
+                    turnedOff = !turnedOff;
+                }
+
+                internetConnection.Color = turnedOff ? new Color(internetConnection.Color.r, internetConnection.Color.g, internetConnection.Color.b, Random.Range(0.8f, 1.0f)) : 
+                    new Color(internetConnection.Color.r, internetConnection.Color.g, internetConnection.Color.b, Random.Range(0, 0.3f));
+
+                yield return null;
+            }
+
+            internetConnection.Color = new Color(internetConnection.Color.r, internetConnection.Color.g, internetConnection.Color.b, 1);
+        }
+
+        private IEnumerator ShortFade(float duration, Color targetColour)
+        {
+            yield return new WaitForSeconds(duration*2);
+           
+            var elapsedTime = 0f;
+            while (elapsedTime <= duration)
+            {
+                elapsedTime += Time.deltaTime;
+                
+                var normalizedTime = Mathf.Clamp01(elapsedTime / duration);
+                
+                var valueR = Mathf.Lerp(internetConnection.Color.r, targetColour.r, normalizedTime);
+                var valueG = Mathf.Lerp(internetConnection.Color.g, targetColour.g, normalizedTime);
+                var valueB = Mathf.Lerp(internetConnection.Color.b, targetColour.b, normalizedTime);
+                
+                internetConnection.Color = new Color(valueR, valueG, valueB);
+
+                yield return null;
+            }
+
+            internetConnection.Color = new Color(targetColour.r, targetColour.g, targetColour.b, 1);
+        }
+
+        public void ColourChange(Color colour, float duration, bool fadeOut)
+        {
+            internetConnection.Color = colour;
+            
+            StartCoroutine(ShortBlink(duration));
+
+            if (fadeOut)
+            {
+                StartCoroutine(ShortFade(duration, _originalEyeColor));
+            }
+        }
+
+        public void StartEyeFade(float duration)
+        {
+            StartCoroutine(EyeFade(duration));
+        }
+        
+        private IEnumerator EyeFade(float duration)
+        {
+            var elapsedTime = 0f;
+            while (elapsedTime <= duration)
+            {
+                elapsedTime += Time.deltaTime;
+                
+                var normalizedTime = Mathf.Clamp01(elapsedTime / duration);
+                
+                var alpha = Mathf.Lerp(1, 0, normalizedTime);
+                
+                eyeLeft.Color = new Color(eyeLeft.Color.r, eyeLeft.Color.g, eyeLeft.Color.b, alpha);
+                eyeRight.Color = new Color(eyeRight.Color.r, eyeRight.Color.g, eyeRight.Color.b, alpha);
+                internetConnection.Color = new Color(internetConnection.Color.r, internetConnection.Color.g, internetConnection.Color.b, alpha);
+
+                foreach (var i in thingsToFadeOut)
+                {
+                    i.Color = new Color(i.Color.r, i.Color.g, i.Color.b, alpha);
+                }
+
+                yield return null;
+            }
         }
 
         private IEnumerator FadeInOut(CubismRenderer leftEye, CubismRenderer rightEye)

@@ -41,6 +41,8 @@ public class ResponseManager : MonoBehaviour
     private bool _longAnswer;
 
     private bool _firstStart;
+    private bool _allowedToSpeak;
+    private bool _pressedDown;
 
     [Header("Responses ")] [SerializeField]
     private string response = "";
@@ -65,11 +67,12 @@ public class ResponseManager : MonoBehaviour
 
     private void Update()
     {
+        if (!_allowedToSpeak) return;
+        
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.LogWarning("Microphone started");
             StartMicrophone();
-
+            _pressedDown = true;
             if (audioRecorder.manualMicrophone)
             {
                 audioRecorder.StartSendingMode();
@@ -84,9 +87,9 @@ public class ResponseManager : MonoBehaviour
 
         if (audioRecorder.manualMicrophone)
         {
-            if (Input.GetKeyUp(KeyCode.Space))
+            if (Input.GetKeyUp(KeyCode.Space) && _pressedDown)
             {
-                Debug.LogWarning("Microphone stopped");
+                _pressedDown = false;
                 StopMicrophone();
             }
         }
@@ -96,8 +99,7 @@ public class ResponseManager : MonoBehaviour
     private void StartSession()
     {
         StartCoroutine(InitializeSessionsAsync(socketClient.ConnectAsync, socketClient.Initialize, StartListeners));
-        StartCoroutine(
-            InitializeSessions(audioRecorder.Initialize, audioPlayer.Initialize, openAiConnection.Initialize));
+        StartCoroutine(InitializeSessions(audioRecorder.Initialize, audioPlayer.Initialize, openAiConnection.Initialize));
     }
 
     private IEnumerator InitializeSessionsAsync(Func<Task> initFunc, params Func<bool>[] executeAfter)
@@ -132,6 +134,7 @@ public class ResponseManager : MonoBehaviour
         }
 
         Debug.LogWarning("Initialized");
+        _allowedToSpeak = true;
     }
 
     private IEnumerator InitializeSessions(params Func<bool>[] initFuncs)
@@ -282,6 +285,8 @@ public class ResponseManager : MonoBehaviour
 
     public void StopMicrophone()
     {
+        _allowedToSpeak = false;
+        
         StopMicAndSendData();
         
         if (lookingStateManager.AsleepState.FranticLookAround)
@@ -302,7 +307,6 @@ public class ResponseManager : MonoBehaviour
 
     private void StopMicAndSendData()
     {
-        Debug.LogWarning("Silence detected");
         audioRecorder.StopRecordingMode();
         audioRecorder.StopSendingMode();
         socketClient.CommitAudioData();
@@ -370,6 +374,7 @@ public class ResponseManager : MonoBehaviour
     {
         StartMicrophone();
         lookingStateManager.SwitchState(lookingStateManager.AttentionState);
+        _allowedToSpeak = true;
     }
 
     private void CalculateFacsStuff((Guid id, string result) job)
@@ -391,5 +396,25 @@ public class ResponseManager : MonoBehaviour
         //JsonReturn jsonReturn = JsonUtility.FromJson<JsonReturn>(job.result);
 
         //TODO CALCULATE WHEN WHAT FACS SHOULD BE SHOWN
+    }
+
+    public void StartResetSession()
+    {
+        StartCoroutine(ResetSession());
+    }
+
+    private IEnumerator ResetSession()
+    {
+        _allowedToSpeak = false;
+        
+        lookingStateManager.SwitchState(lookingStateManager.AsleepState);
+        _firstStart = false;
+
+        yield return new WaitForSeconds(1f);
+        
+        //StopSession();
+        yield return new WaitForSeconds(5f);
+        //StartSession();
+        _allowedToSpeak = true;
     }
 }

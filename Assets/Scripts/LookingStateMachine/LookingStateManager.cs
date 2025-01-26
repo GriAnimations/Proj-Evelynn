@@ -23,6 +23,8 @@ public class LookingStateManager : MonoBehaviour
     [SerializeField] private BlinkingStuff blinkingStuff;
     [SerializeField] private BodyLanguage bodyLanguage;
 
+    public bool mouthStuffOngoing;
+
     public float dartingSpeedLowerEnd = 0.6f;
     public float dartingSpeedUpperEnd = 2f;
 
@@ -51,7 +53,8 @@ public class LookingStateManager : MonoBehaviour
 
     private float _blinkingReduce;
 
-    private bool _automaticHead;
+    public bool automaticHead;
+    public bool wasJustBored;
 
     float FinalHeadY(float input)
     {
@@ -105,10 +108,10 @@ public class LookingStateManager : MonoBehaviour
 
     public void StopSleeping()
     {
+        blinkingStuff.OriginalColour();
         AsleepState.StillAsleep = false;
         bodyLanguage.breatheIncrease = 0;
         _blinking = true;
-        live2DModel.Parameters[0].Value = 0;
         _blinkingReduce = 10f;
         StartCoroutine(Blinking());
     }
@@ -118,7 +121,6 @@ public class LookingStateManager : MonoBehaviour
         while (_blinking)
         {
             var blinkCd = Random.Range(2f, 10f);
-            yield return new WaitForSeconds(blinkCd / _blinkingReduce);
         
             var elapsedTime = 0f;
             while (elapsedTime <= 0.04f)
@@ -150,6 +152,8 @@ public class LookingStateManager : MonoBehaviour
             {
                 _blinkingReduce -= 1;
             }
+            
+            yield return new WaitForSeconds(blinkCd / _blinkingReduce);
         }
     }
     
@@ -190,12 +194,14 @@ public class LookingStateManager : MonoBehaviour
             yield return null;
         }
 
-        if (_automaticHead)
+        
+        if (_headTurnCoroutine != null || !automaticHead && _headTurnCoroutine != null)
         {
-            if (_headTurnCoroutine != null)
-            {
-                StopCoroutine(_headTurnCoroutine);
-            }
+            StopCoroutine(_headTurnCoroutine);
+        }
+        
+        if (automaticHead)
+        {
             _headTurnCoroutine = StartCoroutine(HeadTurn());
         }
         
@@ -307,6 +313,7 @@ public class LookingStateManager : MonoBehaviour
 
     private IEnumerator Distracted()
     {
+        wasJustBored = true;
         SwitchState(BoredState);
         yield return new WaitForSeconds(Random.Range(2.5f, 5f));
         if (currentState == BoredState)
@@ -315,13 +322,13 @@ public class LookingStateManager : MonoBehaviour
         }
     }
 
-    public void EaseEmotions()
+    public void EaseEmotions(float decrease)
     {
         for (var i = 0; i < emotionManager.currentActionUnits.Length; i++)
         {
             if (emotionManager.currentActionUnits[i] > 0)
             {
-                playaround.EaseEmotions(i);
+                playaround.EaseEmotions(i, decrease);
             }
         }
     }
@@ -333,6 +340,7 @@ public class LookingStateManager : MonoBehaviour
 
     private IEnumerator BootUpSequence()
     {
+        automaticHead = false;
         var currentShock = bodyLanguage.shockIncrease;
         var currentHeadY = live2DModel.Parameters[28].Value;
         
@@ -341,6 +349,8 @@ public class LookingStateManager : MonoBehaviour
         
         StartSpecificEmotion(4, randomTime, randomTime);
         blinkingStuff.OriginalColour();
+        
+        ColourChangeWithBlink(new Color(1f, 1f, 1f, 1), 1f, false);
         
         while (elapsedTime <= randomTime)
         {
@@ -364,7 +374,6 @@ public class LookingStateManager : MonoBehaviour
         
         while (elapsedTime <= randomTime)
         {
-            
             elapsedTime += Time.deltaTime;
             var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
             var preValue = EasingFunctions.OutCirc(normalizedTime);
@@ -380,12 +389,14 @@ public class LookingStateManager : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         
         AsleepState.FranticLookAround = true;
+        Debug.Log("here we go frantically looking around again");
         
         elapsedTime = 0f;
         randomTime = Random.Range(1f, 2f);
         
         currentShock = bodyLanguage.shockIncrease;
         currentHeadY = live2DModel.Parameters[28].Value;
+        var currentHeadZ = live2DModel.Parameters[29].Value;
         
         while (elapsedTime <= randomTime)
         {
@@ -397,12 +408,105 @@ public class LookingStateManager : MonoBehaviour
             
             var headY = Mathf.Lerp(currentHeadY, 0f, preValue);
             live2DModel.Parameters[28].Value = headY;
+            live2DModel.Parameters[29].Value = Mathf.Lerp(currentHeadZ, 0f, preValue);
             
             yield return null;
         }
 
         yield return new WaitForSeconds(0.3f);
-        _automaticHead = true;
+        automaticHead = true;
+    }
+
+    public void InitiateShutDown()
+    {
+        _blinking = false;
+        bodyLanguage.breatheIncrease = 2f;
+        
+        StartCoroutine(ShutDown());
+    }
+
+    private IEnumerator ShutDown()
+    {
+        automaticHead = false;
+        var currentShock = bodyLanguage.shockIncrease;
+        var currentHeadY = live2DModel.Parameters[28].Value;
+        
+        var elapsedTime = 0f;
+        var randomTime = Random.Range(0.3f, 0.4f);
+        
+        ColourChangeWithBlink(new Color(1f, 0.2f, 0.4f), 1f, false);
+        
+        EaseEmotions(-1f);
+        
+        while (elapsedTime <= randomTime)
+        {
+            elapsedTime += Time.deltaTime;
+            var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
+            var preValue = EasingFunctions.OutCirc(normalizedTime);
+            
+            bodyLanguage.shockIncrease = Mathf.Lerp(currentShock, -25f, preValue);
+            
+            var headY = Mathf.Lerp(currentHeadY, -0.8f, preValue);
+            live2DModel.Parameters[28].Value = FinalHeadY(headY);
+            
+            yield return null;
+        }
+        
+        elapsedTime = 0f;
+        randomTime = Random.Range(1f, 1.1f);
+        
+        blinkingStuff.StartEyeFade(2.2f);
+        
+        currentShock = bodyLanguage.shockIncrease;
+        currentHeadY = live2DModel.Parameters[28].Value;
+        var currentHeadX = live2DModel.Parameters[27].Value;
+        
+        while (elapsedTime <= randomTime)
+        {
+            
+            elapsedTime += Time.deltaTime;
+            var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
+            var preValue = EasingFunctions.OutCirc(normalizedTime);
+            
+            bodyLanguage.shockIncrease = Mathf.Lerp(currentShock, 20f, preValue);
+            
+            var headY = Mathf.Lerp(currentHeadY, 0.8f, preValue);
+            live2DModel.Parameters[28].Value = FinalHeadY(headY);
+            
+            var headX = Mathf.Lerp(currentHeadX, 0f, preValue);
+            live2DModel.Parameters[27].Value = headX;
+            
+            yield return null;
+        }
+        
+
+        yield return new WaitForSeconds(1f);
+        
+        elapsedTime = 0f;
+        randomTime = Random.Range(2f, 2.5f);
+        
+        currentShock = bodyLanguage.shockIncrease;
+        currentHeadY = live2DModel.Parameters[28].Value;
+        
+        while (elapsedTime <= randomTime)
+        {
+            elapsedTime += Time.deltaTime;
+            var normalizedTime = Mathf.Clamp01(elapsedTime / randomTime);
+            var preValue = EasingFunctions.InOutCirc(normalizedTime);
+            
+            bodyLanguage.shockIncrease = Mathf.Lerp(currentShock, -20f, preValue);
+            
+            var headY = Mathf.Lerp(currentHeadY, -1f, preValue);
+            live2DModel.Parameters[28].Value = headY;
+            
+            live2DModel.Parameters[0].Value = Mathf.Lerp(0f, 2f, preValue);
+            
+            yield return null;
+        }
+        
+        EaseEmotions(-1f);
+        yield return new WaitForSeconds(0.3f);
+        automaticHead = true;
     }
 
     public void Wait(float time)
@@ -423,6 +527,11 @@ public class LookingStateManager : MonoBehaviour
         blinkingStuff.StartEyesBlink();
     }
 
+    public void ColourChangeWithBlink(Color colour, float duration, bool fade)
+    {
+        blinkingStuff.ColourChange(colour, duration, fade);
+    }
+
     public void StartSpecificEmotion(int action, float time, float intensity)
     {
         playaround.StartPlaySpecificAction(action, time, intensity);
@@ -430,7 +539,7 @@ public class LookingStateManager : MonoBehaviour
 
     public void StartSpecificMouth(string action, float time, float intensity)
     {
-        playaround.StartPLaySpecificMouth(action, time, intensity);
+        if (!mouthStuffOngoing) playaround.StartPLaySpecificMouth(action, time, intensity);
     }
 
     public void StartSpecificBody(int index, float target, float speed)
@@ -441,5 +550,79 @@ public class LookingStateManager : MonoBehaviour
     public void ChangeShockIncrease(float value)
     {
         bodyLanguage.shockIncrease += value;
+    }
+
+    public void StartNod(float duration, int amount)
+    {
+        StartCoroutine(Nodding(duration, amount));
+    }
+
+    private IEnumerator Nodding(float duration, int amount)
+    {
+        var overallTime = 0;
+        automaticHead = false;
+        var previousHeadY = live2DModel.Parameters[28].Value;
+        var randomValue = Random.Range(0.3f, 0.5f);
+        var randomChance = Random.Range(0, 2);
+        
+        while (overallTime < amount)
+        {
+            overallTime++;
+            
+            var currentHeadY = live2DModel.Parameters[28].Value;
+        
+            var elapsedTime = 0f;
+            while (elapsedTime <= duration)
+            {
+                elapsedTime += Time.deltaTime;
+                var normalizedTime = Mathf.Clamp01(elapsedTime / duration);
+                var value = EasingFunctions.InOutSine(normalizedTime);
+
+                if (randomChance == 0)
+                {
+                    live2DModel.Parameters[28].Value = currentHeadY + (currentHeadY - randomValue - currentHeadY) * value;
+                }
+                else
+                {
+                    live2DModel.Parameters[28].Value = currentHeadY + (currentHeadY + randomValue - currentHeadY) * value;
+                }
+                
+            
+                yield return null;
+            }
+            elapsedTime = 0f;
+            currentHeadY = live2DModel.Parameters[28].Value;
+            
+            while (elapsedTime <= duration)
+            {
+                elapsedTime += Time.deltaTime;
+                var normalizedTime = Mathf.Clamp01(elapsedTime / duration);
+                var value = EasingFunctions.InOutSine(normalizedTime);
+
+                if (overallTime == amount - 1)
+                {
+                    live2DModel.Parameters[28].Value = currentHeadY + (previousHeadY - currentHeadY) * value;
+                }
+                else
+                {
+                    if (randomChance == 0)
+                    {
+                        live2DModel.Parameters[28].Value = currentHeadY + (currentHeadY + randomValue - currentHeadY) * value;
+                    }
+                    else
+                    {
+                        live2DModel.Parameters[28].Value = currentHeadY + (currentHeadY - randomValue - currentHeadY) * value;
+                    }
+                }
+                
+                yield return null;
+            }
+
+            duration *= 0.8f;
+            randomValue -= 0.15f;
+        }
+        
+        yield return null;
+        automaticHead = true;
     }
 }
