@@ -10,6 +10,12 @@ public class StartUpManager : MonoBehaviour
     [SerializeField] private GameObject contract;
     [SerializeField] private GameObject wholeCanvas;
     
+    [SerializeField] private float fadeDuration;
+    [SerializeField] private GameObject logo;
+    
+    [SerializeField] private Sprite[] buttonSprites;
+    [SerializeField] private Button startButton;
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -18,13 +24,15 @@ public class StartUpManager : MonoBehaviour
 
     private IEnumerator FadeOutBlackBackGround()
     {
+        yield return new WaitForSeconds(fadeDuration);
+        
         var elapsedTime = 0f;
         while (elapsedTime <= 2f)
         {
             elapsedTime += Time.deltaTime;
             
             var normalizedTime = Mathf.Clamp01(elapsedTime / 2f);
-            var alpha = Mathf.Lerp(1, 0, normalizedTime);
+            var alpha = Mathf.Lerp(1, 0.7f, normalizedTime);
             blackBackGround.color = new Color(0, 0, 0, alpha);
 
             if (elapsedTime >= 1.5f) SpawnContract();
@@ -32,8 +40,7 @@ public class StartUpManager : MonoBehaviour
             yield return null;
         }
         
-        
-        blackBackGround.color = new Color(0, 0, 0, 0);
+        logo.gameObject.SetActive(false);
     }
 
     private void SpawnContract()
@@ -43,7 +50,6 @@ public class StartUpManager : MonoBehaviour
 
     public void DespawnContract()
     {
-        contract.SetActive(false);
         wholeCanvas.SetActive(false);
         //replace this with anim and do anim event with the other one
         
@@ -53,5 +59,10 @@ public class StartUpManager : MonoBehaviour
     public void DeactivateItForReal()
     {
         contract.SetActive(false);
+    }
+
+    public void SwitchButton()
+    {
+        
     }
 }

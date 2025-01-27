@@ -19,13 +19,15 @@ public class RadioManager : MonoBehaviour
     [SerializeField] private float[] crossFadePoints;
     [SerializeField] private float crossFadeThreshold = 0.15f;
     
-    public float maxVolume;
+    //public float maxVolume;
     
     private int _currentClipIndex;
 
     private void Start()
     {
-        volumeSlider.onValueChanged.AddListener(v => maxVolume = v);
+        volumeSlider.value = 0;
+        
+        volumeSlider.onValueChanged.AddListener(v => volumeSlider.value = v);
     }
 
     private void Update()
@@ -52,8 +54,8 @@ public class RadioManager : MonoBehaviour
         var distanceToPoint = Mathf.Abs(channelSlider.value - crossFadePoints[closestPointIndex]);
         var t = Mathf.Clamp01(1 - distanceToPoint / crossFadeThreshold);
 
-        whiteNoise.volume = Mathf.Lerp(maxVolume/5, -0.1f, t);
-        music.volume = Mathf.Lerp(0, maxVolume, t);
+        whiteNoise.volume = Mathf.Lerp(volumeSlider.value/5, -0.1f, t);
+        music.volume = Mathf.Lerp(0, volumeSlider.value, t);
 
         if (_currentClipIndex == closestPointIndex) return;
         _currentClipIndex = closestPointIndex;

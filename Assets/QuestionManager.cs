@@ -8,15 +8,8 @@ public class QuestionManager : MonoBehaviour
 {
     [SerializeField] private GameObject questionImage;
     [SerializeField] private GameObject escapeButton;
-    [SerializeField] private Image questionLight;
     
     public bool questionsDisplayed;
-
-
-    private void Start()
-    {
-        questionLight.color = new Color(0.5f, 0.18f, 0.3f);
-    }
 
     private void Update()
     {
@@ -33,7 +26,7 @@ public class QuestionManager : MonoBehaviour
         
         questionImage.SetActive(false);
         escapeButton.SetActive(false);
-        questionLight.color = new Color(0.5f, 0.18f, 0.3f);
+        //add here the off image
         
         questionsDisplayed = false;
     }
@@ -44,7 +37,7 @@ public class QuestionManager : MonoBehaviour
         {
             questionImage.SetActive(true);
             escapeButton.SetActive(true);
-            questionLight.color = new Color(0f, 0.88f, 0.95f);
+            //add here the on image
             //the button as anim event after the question spawn anim is done
             
             questionsDisplayed = true;
