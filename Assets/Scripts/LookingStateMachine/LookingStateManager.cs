@@ -371,6 +371,7 @@ public class LookingStateManager : MonoBehaviour
         
         currentShock = bodyLanguage.shockIncrease;
         currentHeadY = live2DModel.Parameters[28].Value;
+        var currentHeadZ = live2DModel.Parameters[29].Value;
         
         while (elapsedTime <= randomTime)
         {
@@ -383,20 +384,20 @@ public class LookingStateManager : MonoBehaviour
             var headY = Mathf.Lerp(currentHeadY, 0.8f, preValue);
             live2DModel.Parameters[28].Value = FinalHeadY(headY);
             
+            live2DModel.Parameters[29].Value = Mathf.Lerp(currentHeadZ, 0f, preValue);
+            
             yield return null;
         }
 
         yield return new WaitForSeconds(0.1f);
         
         AsleepState.FranticLookAround = true;
-        Debug.Log("here we go frantically looking around again");
         
         elapsedTime = 0f;
         randomTime = Random.Range(1f, 2f);
         
         currentShock = bodyLanguage.shockIncrease;
         currentHeadY = live2DModel.Parameters[28].Value;
-        var currentHeadZ = live2DModel.Parameters[29].Value;
         
         while (elapsedTime <= randomTime)
         {
@@ -408,7 +409,6 @@ public class LookingStateManager : MonoBehaviour
             
             var headY = Mathf.Lerp(currentHeadY, 0f, preValue);
             live2DModel.Parameters[28].Value = headY;
-            live2DModel.Parameters[29].Value = Mathf.Lerp(currentHeadZ, 0f, preValue);
             
             yield return null;
         }
@@ -562,7 +562,7 @@ public class LookingStateManager : MonoBehaviour
         var overallTime = 0;
         automaticHead = false;
         var previousHeadY = live2DModel.Parameters[28].Value;
-        var randomValue = Random.Range(0.3f, 0.5f);
+        var randomValue = Random.Range(0.3f, 0.7f);
         var randomChance = Random.Range(0, 2);
         
         while (overallTime < amount)

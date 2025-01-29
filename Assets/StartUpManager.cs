@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class StartUpManager : MonoBehaviour
 {
+    private static readonly int Status = Animator.StringToHash("status");
 
     [SerializeField] private Image blackBackGround;
     [SerializeField] private GameObject contract;
@@ -15,6 +16,11 @@ public class StartUpManager : MonoBehaviour
     
     [SerializeField] private Sprite[] buttonSprites;
     [SerializeField] private Button startButton;
+    
+    [SerializeField] private QuestionManager questionManager;
+    [SerializeField] private Animator animator;
+    
+    [SerializeField] private ResponseManager responseManager;
     
     // Start is called before the first frame update
     void Start()
@@ -32,7 +38,7 @@ public class StartUpManager : MonoBehaviour
             elapsedTime += Time.deltaTime;
             
             var normalizedTime = Mathf.Clamp01(elapsedTime / 2f);
-            var alpha = Mathf.Lerp(1, 0.7f, normalizedTime);
+            var alpha = Mathf.Lerp(1, 0.85f, normalizedTime);
             blackBackGround.color = new Color(0, 0, 0, alpha);
 
             if (elapsedTime >= 1.5f) SpawnContract();
@@ -45,24 +51,23 @@ public class StartUpManager : MonoBehaviour
 
     private void SpawnContract()
     {
-        contract.SetActive(true);
+        animator.Play("Contract Spawn");
     }
 
     public void DespawnContract()
     {
-        wholeCanvas.SetActive(false);
-        //replace this with anim and do anim event with the other one
-        
-        //also start the bootup anim here
+        animator.Play("Contract Despawn");
     }
 
     public void DeactivateItForReal()
     {
-        contract.SetActive(false);
+        questionManager.ToggleQuestions();
+        wholeCanvas.SetActive(false);
+        responseManager.allowedToSpeak = true;
     }
 
-    public void SwitchButton()
+    public void ActivateItForReal()
     {
-        
+        contract.SetActive(true);
     }
 }

@@ -3,48 +3,61 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Image = UnityEngine.UIElements.Image;
 
 public class QuestionManager : MonoBehaviour
 {
+    private static readonly int Status = Animator.StringToHash("status");
     [SerializeField] private GameObject questionImage;
     [SerializeField] private GameObject escapeButton;
+    [SerializeField] private Animator animator;
+    [SerializeField] private QuitGameManager quitGameManager;
     
     public bool questionsDisplayed;
+    
 
     private void Update()
     {
-        if (questionsDisplayed && Input.GetKeyDown(KeyCode.Escape))
+        if (questionsDisplayed && Input.GetKeyDown(KeyCode.Escape) && !quitGameManager.quitGDisplayed)
         {
-            DespawnQuestions();
+            ToggleQuestions();
         }
     }
 
-    public void DespawnQuestions()
-    {
-        //replace with play anim into anim event
-        //also set button to non-interactive on button press
-        
-        questionImage.SetActive(false);
-        escapeButton.SetActive(false);
-        //add here the off image
-        
-        questionsDisplayed = false;
-    }
-
-    public void SpawnQuestions()
+    public void ToggleQuestions()
     {
         if (!questionsDisplayed)
         {
-            questionImage.SetActive(true);
-            escapeButton.SetActive(true);
-            //add here the on image
-            //the button as anim event after the question spawn anim is done
-            
-            questionsDisplayed = true;
+            SpawnQuestion();
         }
         else
         {
             DespawnQuestions();
         }
+        
+        questionsDisplayed = !questionsDisplayed;
     }
+    
+    private void SpawnQuestion()
+    {
+        animator.Play("UI Animation");
+    }
+
+    public void DisplayUI()
+    {
+        questionImage.SetActive(true);
+        escapeButton.SetActive(true);
+    }
+
+    private void DespawnQuestions()
+    {
+        animator.Play("UI Animation backwards");
+    }
+
+    public void HideUI()
+    {
+        questionImage.SetActive(false);
+        escapeButton.SetActive(false);
+    }
+    
 }

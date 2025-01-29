@@ -14,7 +14,7 @@ namespace LookingStateMachine
             
             looking.lookingSpeed = Random.Range(0.2f, 0.45f);
             
-            looking.DoAction(looking.ThinkingState);
+            looking.StartCoroutine(WaitForAction(Random.Range(1f, 2f)));
             
             looking.ColourChangeWithBlink(new Color(1f, 0.6f, 0.4f,1), 1f, false);
             looking.StartBlinkingLights();
@@ -52,6 +52,8 @@ namespace LookingStateMachine
                     looking.StartSpecificEmotion(6, Random.Range(2f, 2.5f), Random.Range(0.3f, 0.8f));
                     
                     looking.StartSpecificBody(29, ChooseX(), Random.Range(1f, 2f));
+                    looking.StartSpecificBody(45, Random.Range(-0.15f, 0.15f), Random.Range(1f, 3f));
+                    looking.StartSpecificBody(46, Random.Range(-0.1f, 0.1f), Random.Range(1f, 3f));
                     
                     looking.StartCoroutine(WaitForAction(Random.Range(4f, 5f)));
                     break;
@@ -65,6 +67,8 @@ namespace LookingStateMachine
                     looking.StartSpecificMouth("Mouth_M", Random.Range(2f, 3.5f), Random.Range(0.1f, 0.3f));
                     
                     looking.StartSpecificBody(29, ChooseX() / 3, Random.Range(2f, 4f));
+                    looking.StartSpecificBody(45, Random.Range(-0.15f, 0.15f), Random.Range(1f, 3f));
+                    looking.StartSpecificBody(46, Random.Range(-0.1f, 0.1f), Random.Range(1f, 3f));
                     
                     looking.StartCoroutine(WaitForAction(Random.Range(4f, 5f)));
                     break;

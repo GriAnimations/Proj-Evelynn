@@ -15,7 +15,7 @@ namespace LookingStateMachine
         
             looking.ChoosePoint(Random.Range(-2f, 2f), Random.Range(-2f, 2f));
             looking.thinking = false;
-            looking.EaseEmotions(Random.Range(-0.1f, -0.2f));
+            looking.EaseEmotions(Random.Range(-0.15f, -0.2f));
             
             looking.ColourChangeWithBlink(new Color(0.7f, 0.75f, 1f, 1), 1f, true);
         }
@@ -27,7 +27,7 @@ namespace LookingStateMachine
             looking.Wait(Random.Range(2f, 10f));
             if (_boredCount >= 2)
             {
-                looking.EaseEmotions(Random.Range(-0.1f, -0.2f));
+                looking.EaseEmotions(Random.Range(-0.15f, -0.3f));
             }
             _boredCount++;
         

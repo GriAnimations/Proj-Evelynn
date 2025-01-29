@@ -41,7 +41,7 @@ public class CurrentEmotionPlayaround : MonoBehaviour
         var elapsedTime = 0f;
         var timeDelay = Random.Range(1f, 2f);
         var currentValue = emotionManager.currentActionUnits[currentAction];
-        var nextValue = currentValue + Random.Range(-0.2f, 0.4f);
+        var nextValue = currentValue + Random.Range(-0.2f, 0.25f);
         
         while (elapsedTime <= timeDelay)
         {

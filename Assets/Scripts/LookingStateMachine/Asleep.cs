@@ -23,11 +23,7 @@ namespace LookingStateMachine
             looking.lookingSpeed = Random.Range(0.2f, 0.35f);
             looking.ChoosePoint(0, Random.Range(0.5f, 0.7f));
             looking.StartSpecificMouth("Mouth_AH", Random.Range(1f, 2f), Random.Range(0.2f, 0.4f));
-            //looking.StartSpecificEmotion(1, randomTime, Random.Range(0.6f, 0.7f));
-            //looking.StartSpecificEmotion(2, randomTime, Random.Range(0.6f, 0.7f));
-            //looking.StartSpecificEmotion(4, randomTime, Random.Range(0.6f, 0.7f));
-            //looking.StartSpecificEmotion(5, randomTime, Random.Range(0.8f, 0.9f));
-            //looking.StartSpecificEmotion(15, randomTime, Random.Range(0.1f, 0.3f));
+            
             
             looking.InitiateShutDown();
         }

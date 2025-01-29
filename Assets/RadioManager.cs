@@ -54,7 +54,7 @@ public class RadioManager : MonoBehaviour
         var distanceToPoint = Mathf.Abs(channelSlider.value - crossFadePoints[closestPointIndex]);
         var t = Mathf.Clamp01(1 - distanceToPoint / crossFadeThreshold);
 
-        whiteNoise.volume = Mathf.Lerp(volumeSlider.value/5, -0.1f, t);
+        whiteNoise.volume = Mathf.Lerp(volumeSlider.value/80, -0.1f, t);
         music.volume = Mathf.Lerp(0, volumeSlider.value, t);
 
         if (_currentClipIndex == closestPointIndex) return;

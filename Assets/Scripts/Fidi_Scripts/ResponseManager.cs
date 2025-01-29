@@ -3,8 +3,11 @@ using System.Collections;
 using System.Threading.Tasks;
 using Fidi_Scripts;
 using OpenAI.RealtimeConversation;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 
 [RequireComponent(typeof(SocketClient))]
@@ -14,10 +17,13 @@ using UnityEngine.Rendering;
 [RequireComponent(typeof(ConversationLogger))]
 public class ResponseManager : MonoBehaviour
 {
+    private static readonly int Status = Animator.StringToHash("status");
     private SocketClient socketClient;
 
     [SerializeField] private EmotionManager emotionManager;
     [SerializeField] private LookingStateManager lookingStateManager;
+    [SerializeField] private Button resetButton;
+    [SerializeField] private Animator tvAnimator;
 
     private OpenAiConnection openAiConnection;
 
@@ -41,7 +47,7 @@ public class ResponseManager : MonoBehaviour
     private bool _longAnswer;
 
     private bool _firstStart;
-    private bool _allowedToSpeak;
+    public bool allowedToSpeak;
     private bool _pressedDown;
 
     [Header("Responses ")] [SerializeField]
@@ -62,12 +68,13 @@ public class ResponseManager : MonoBehaviour
 
     private void Start()
     {
+        resetButton.interactable = false;
         StartSession();
     }
 
     private void Update()
     {
-        if (!_allowedToSpeak) return;
+        if (!allowedToSpeak) return;
         
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -134,7 +141,6 @@ public class ResponseManager : MonoBehaviour
         }
 
         Debug.LogWarning("Initialized");
-        _allowedToSpeak = true;
     }
 
     private IEnumerator InitializeSessions(params Func<bool>[] initFuncs)
@@ -275,7 +281,10 @@ public class ResponseManager : MonoBehaviour
 
     public void StartMicrophone()
     {
+        resetButton.interactable = false;
         audioRecorder.StartRecordingMode();
+        
+        tvAnimator.Play("Anim_Record");
         
         if (lookingStateManager.AsleepState.FranticLookAround)
         {
@@ -285,7 +294,7 @@ public class ResponseManager : MonoBehaviour
 
     public void StopMicrophone()
     {
-        _allowedToSpeak = false;
+        allowedToSpeak = false;
         
         StopMicAndSendData();
         
@@ -293,6 +302,8 @@ public class ResponseManager : MonoBehaviour
         {
             lookingStateManager.SwitchState(lookingStateManager.ThinkingState);
         }
+        
+        tvAnimator.Play("Anim_Thinking");
         
     }
 
@@ -359,6 +370,7 @@ public class ResponseManager : MonoBehaviour
         audioPlayer.PlayAudio();
         //TODO Whatever you want to do with short sentences
         Debug.Log("Short sentence");
+        tvAnimator.Play("Anim_Talking");
     }
 
     private void LongSentence(float duration)
@@ -367,6 +379,7 @@ public class ResponseManager : MonoBehaviour
 
         //TODO Whatever you want to do with long sentences
         Debug.Log("Long sentence");
+        tvAnimator.Play("Anim_Talking");
     }
 
 
@@ -374,7 +387,12 @@ public class ResponseManager : MonoBehaviour
     {
         StartMicrophone();
         lookingStateManager.SwitchState(lookingStateManager.AttentionState);
-        _allowedToSpeak = true;
+        allowedToSpeak = true;
+        tvAnimator.Play("Anim_Talk");
+        if (!lookingStateManager.AsleepState.StillAsleep)
+        {
+            resetButton.interactable = true;
+        }
     }
 
     private void CalculateFacsStuff((Guid id, string result) job)
@@ -405,7 +423,8 @@ public class ResponseManager : MonoBehaviour
 
     private IEnumerator ResetSession()
     {
-        _allowedToSpeak = false;
+        allowedToSpeak = false;
+        resetButton.interactable = false;
         
         lookingStateManager.SwitchState(lookingStateManager.AsleepState);
         _firstStart = false;
@@ -415,6 +434,6 @@ public class ResponseManager : MonoBehaviour
         //StopSession();
         yield return new WaitForSeconds(5f);
         //StartSession();
-        _allowedToSpeak = true;
+        allowedToSpeak = true;
     }
 }
