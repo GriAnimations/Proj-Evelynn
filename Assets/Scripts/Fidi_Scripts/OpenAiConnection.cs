@@ -70,6 +70,7 @@ public class OpenAiConnection : MonoBehaviour
     public void Dispose()
     {
         StopJobQueue();
+        
     }
 
     private IEnumerator ProcessJobDone()

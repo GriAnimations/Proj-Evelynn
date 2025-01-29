@@ -149,11 +149,23 @@ public class AudioRec : MonoBehaviour
         StopRecording();
         StopRecordingMode();
         audioBuffer?.Clear();
+        lastSampleOffset = 0;
+        Silence = true;
 
         if (detectNotTalkingCoroutine != null)
         {
             StopCoroutine(detectNotTalkingCoroutine);
         }
+        
+        if (detectTalkingCoroutine != null)
+        {
+            StopCoroutine(detectTalkingCoroutine);
+        }
+        
+        recognizer?.Stop();
+        recognizer?.Dispose();
+        recognizer = null;
+        
     }
 
     public void StartRecordingMode()
@@ -230,9 +242,9 @@ public class AudioRec : MonoBehaviour
 
     void StopRecording()
     {
-        if (Microphone.IsRecording(null))
+        if (Microphone.IsRecording(microphoneName))
         {
-            Microphone.End(null);
+            Microphone.End(microphoneName);
             Debug.LogWarning("Recording stopped...");
         }
     }

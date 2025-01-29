@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using System.Threading.Tasks;
 using Fidi_Scripts;
-using OpenAI.RealtimeConversation;
-using TMPro;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 
@@ -18,18 +15,22 @@ using UnityEngine.UI;
 public class ResponseManager : MonoBehaviour
 {
     private static readonly int Status = Animator.StringToHash("status");
-    private SocketClient socketClient;
+    public SocketClient socketClient;
 
-    [SerializeField] private EmotionManager emotionManager;
-    [SerializeField] private LookingStateManager lookingStateManager;
-    [SerializeField] private Button resetButton;
-    [SerializeField] private Animator tvAnimator;
+    private EmotionManager emotionManager;
+    private LookingStateManager lookingStateManager;
+    private Button resetButton;
+    private Animator tvAnimator;
 
     private OpenAiConnection openAiConnection;
 
     private AudioPlayer audioPlayer;
     private AudioRec audioRecorder;
     private ConversationLogger conversationLogger;
+
+    private uLipSync.uLipSync uLipSync;
+
+    private LipSync lipSync;
 
     private AudioClip currentClip;
 
@@ -39,8 +40,8 @@ public class ResponseManager : MonoBehaviour
     private float currentDuration = 0;
 
     private bool isAudioReady = false;
-    private bool responseReady;
-    private bool agentResponseReady;
+    private bool responseReady = false;
+    private bool agentResponseReady = false;
 
     private Coroutine initCoroutine;
 
@@ -57,6 +58,8 @@ public class ResponseManager : MonoBehaviour
 
     [SerializeField] private string understoodText = "";
 
+    private bool sessionStopped = true;
+
     private void Awake()
     {
         audioRecorder = GetComponent<AudioRec>();
@@ -64,6 +67,17 @@ public class ResponseManager : MonoBehaviour
         socketClient = GetComponent<SocketClient>();
         openAiConnection = GetComponent<OpenAiConnection>();
         conversationLogger = GetComponent<ConversationLogger>();
+
+        emotionManager = FindObjectOfType<EmotionManager>();
+
+        lookingStateManager = FindObjectOfType<LookingStateManager>();
+
+        resetButton = Resources.FindObjectsOfTypeAll<Button>().First(button => button.name == "Reset_Button");
+
+        tvAnimator = FindObjectsOfType<Animator>().First(animator => animator.name == "TV1");
+
+        uLipSync = GetComponent<uLipSync.uLipSync>();
+        lipSync = FindObjectOfType<LipSync>();
     }
 
     private void Start()
@@ -75,7 +89,7 @@ public class ResponseManager : MonoBehaviour
     private void Update()
     {
         if (!allowedToSpeak) return;
-        
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             StartMicrophone();
@@ -100,13 +114,24 @@ public class ResponseManager : MonoBehaviour
                 StopMicrophone();
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.R))//TODO GERALD 
+        {
+            socketClient.CommitAudioAndRequestResponse("You are being turned off now, and you will perish");
+        }
     }
 
+
+    private void OnDestroy()
+    {
+        StopSession();
+    }
 
     private void StartSession()
     {
         StartCoroutine(InitializeSessionsAsync(socketClient.ConnectAsync, socketClient.Initialize, StartListeners));
-        StartCoroutine(InitializeSessions(audioRecorder.Initialize, audioPlayer.Initialize, openAiConnection.Initialize));
+        StartCoroutine(
+            InitializeSessions(audioRecorder.Initialize, audioPlayer.Initialize, openAiConnection.Initialize));
     }
 
     private IEnumerator InitializeSessionsAsync(Func<Task> initFunc, params Func<bool>[] executeAfter)
@@ -185,12 +210,16 @@ public class ResponseManager : MonoBehaviour
 
     private void StopSession()
     {
-        StopListeners();
-
         audioRecorder.Dispose();
+        Debug.LogWarning("AudioRecorder disposed");
         audioPlayer.Dispose();
+        Debug.LogWarning("AudioPlayer disposed");
         openAiConnection.Dispose();
+        Debug.LogWarning("OpenAiConnection disposed");
         socketClient.Disconnect();
+        Debug.LogWarning("SocketClient disposed");
+
+        StopListeners();
     }
 
     private bool StartListeners()
@@ -200,42 +229,39 @@ public class ResponseManager : MonoBehaviour
         try
         {
             audioRecorder.OnSilenceDetected += StopMicAndSendData;
+
             if (audioRecorder.recognizer != null)
+            {
                 audioRecorder.recognizer.OnPhraseRecognized += audioRecorder.OnPhraseRecognized;
+            }
 
             audioRecorder.OnTalkingDetected += audioRecorder.StartSendingMode;
 
             socketClient.OnTextDoneMessage += SetupText;
 
-            socketClient.OnTextDoneMessage += text =>
-            {
-                response = text;
-                responseReady = true;
-            };
+            socketClient.OnTextDoneMessage += OnSocketClientOnOnTextDoneMessage;
 
-            socketClient.OnVoiceTranscriptDoneMessage += text => { understoodText = text; };
+            socketClient.OnVoiceTranscriptDoneMessage += OnSocketClientOnOnVoiceTranscriptDoneMessage;
+
             if (conversationLogger.logging)
             {
                 socketClient.OnVoiceTranscriptDoneMessage += OnResponseDone;
             }
 
-
             socketClient.OnAudioDoneMessage += audioPlayer.SetupAudio;
             socketClient.OnAudioDeltaMessage += audioPlayer.OnAudioDeltaMessage;
 
             audioPlayer.OnAudioReady += OnAudioReady;
-            audioPlayer.OnAudioDone += () => isAudioReady = true;
-            audioPlayer.OnAudioReady += clip => { currentClip = clip; };
+            audioPlayer.OnAudioDone += OnAudioPlayerOnOnAudioDone;
+            audioPlayer.OnAudioReady += OnAudioPlayerOnOnAudioReady;
 
             audioPlayer.OnAudioDone += OnAudioDone;
 
             openAiConnection.OnJobDone += CalculateFacsStuff;
 
-            openAiConnection.OnJobDone += job =>
-            {
-                agentResponse = job.result;
-                agentResponseReady = true;
-            };
+            openAiConnection.OnJobDone += OnOpenAiConnectionOnOnJobDone;
+
+            uLipSync.onLipSyncUpdate.AddListener(lipSync.OnLipSyncUpdate);
         }
         catch (Exception e)
         {
@@ -243,31 +269,76 @@ public class ResponseManager : MonoBehaviour
             return false;
         }
 
+        sessionStopped = false;
+
         return true;
+    }
+
+    private void OnOpenAiConnectionOnOnJobDone((Guid id, string result) job)
+    {
+        agentResponse = job.result;
+        agentResponseReady = true;
+    }
+
+    private void OnAudioPlayerOnOnAudioReady(AudioClip clip)
+    {
+        currentClip = clip;
+    }
+
+    private void OnAudioPlayerOnOnAudioDone()
+    {
+        isAudioReady = true;
+    }
+
+    private void OnSocketClientOnOnVoiceTranscriptDoneMessage(string text)
+    {
+        understoodText = text;
+    }
+
+    private void OnSocketClientOnOnTextDoneMessage(string text)
+    {
+        response = text;
+        responseReady = true;
     }
 
     private void StopListeners()
     {
         audioRecorder.OnSilenceDetected -= StopMicAndSendData;
+
         if (audioRecorder.recognizer != null)
+        {
             audioRecorder.recognizer.OnPhraseRecognized -= audioRecorder.OnPhraseRecognized;
+        }
+
+        audioRecorder.OnTalkingDetected -= audioRecorder.StartSendingMode;
 
         socketClient.OnTextDoneMessage -= SetupText;
-        socketClient.OnAudioDoneMessage -= audioPlayer.SetupAudio;
-        socketClient.OnAudioDeltaMessage -= audioPlayer.OnAudioDeltaMessage;
+
+        socketClient.OnTextDoneMessage -= OnSocketClientOnOnTextDoneMessage;
+
+        socketClient.OnVoiceTranscriptDoneMessage -= OnSocketClientOnOnVoiceTranscriptDoneMessage;
 
         if (conversationLogger.logging)
         {
             socketClient.OnVoiceTranscriptDoneMessage -= OnResponseDone;
         }
 
+        socketClient.OnAudioDoneMessage -= audioPlayer.SetupAudio;
+        socketClient.OnAudioDeltaMessage -= audioPlayer.OnAudioDeltaMessage;
 
         audioPlayer.OnAudioReady -= OnAudioReady;
-
+        audioPlayer.OnAudioDone -= OnAudioPlayerOnOnAudioDone;
+        audioPlayer.OnAudioReady -= OnAudioPlayerOnOnAudioReady;
 
         audioPlayer.OnAudioDone -= OnAudioDone;
 
         openAiConnection.OnJobDone -= CalculateFacsStuff;
+
+        openAiConnection.OnJobDone -= OnOpenAiConnectionOnOnJobDone;
+
+        uLipSync.onLipSyncUpdate.RemoveListener(lipSync.OnLipSyncUpdate);
+
+        sessionStopped = true;
     }
 
 
@@ -283,9 +354,9 @@ public class ResponseManager : MonoBehaviour
     {
         resetButton.interactable = false;
         audioRecorder.StartRecordingMode();
-        
+
         tvAnimator.Play("Anim_Record");
-        
+
         if (lookingStateManager.AsleepState.FranticLookAround)
         {
             lookingStateManager.SwitchState(lookingStateManager.ListeningState);
@@ -295,16 +366,15 @@ public class ResponseManager : MonoBehaviour
     public void StopMicrophone()
     {
         allowedToSpeak = false;
-        
+
         StopMicAndSendData();
-        
+
         if (lookingStateManager.AsleepState.FranticLookAround)
         {
             lookingStateManager.SwitchState(lookingStateManager.ThinkingState);
         }
-        
+
         tvAnimator.Play("Anim_Thinking");
-        
     }
 
     private void SetupText(string result)
@@ -418,22 +488,7 @@ public class ResponseManager : MonoBehaviour
 
     public void StartResetSession()
     {
-        StartCoroutine(ResetSession());
-    }
-
-    private IEnumerator ResetSession()
-    {
-        allowedToSpeak = false;
         resetButton.interactable = false;
-        
         lookingStateManager.SwitchState(lookingStateManager.AsleepState);
-        _firstStart = false;
-
-        yield return new WaitForSeconds(1f);
-        
-        //StopSession();
-        yield return new WaitForSeconds(5f);
-        //StartSession();
-        allowedToSpeak = true;
     }
 }

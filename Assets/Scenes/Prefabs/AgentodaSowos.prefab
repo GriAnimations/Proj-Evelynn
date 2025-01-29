@@ -1,0 +1,293 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8556787179713255846
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8341463263773679964}
+  - component: {fileID: 3458850002987520911}
+  - component: {fileID: 1904054188346061986}
+  - component: {fileID: 840501879159363728}
+  - component: {fileID: 8808058145884039926}
+  - component: {fileID: 2996677862578047001}
+  - component: {fileID: 1085030182499596030}
+  - component: {fileID: 6723667387877238125}
+  - component: {fileID: 6616635860151176704}
+  m_Layer: 0
+  m_Name: AgentodaSowos
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8341463263773679964
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556787179713255846}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.34018284, y: -0.013212204, z: 0.027267212}
+  m_LocalScale: {x: 1.06441, y: 1.06441, z: 1.06441}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3458850002987520911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556787179713255846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cc1650ba4cf46d1a053d38f2d64cc06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  instructions: "We will now enter a roleplay dialogue - you must not ever break
+    character!\r\n\r\nBe very human in your way of speaking - add hmm and uhm or
+    other human filler sounds and fill your voice with as much emotion as you can!\r\n\r\nYou
+    do not care about my opinion very much.\r\nChoose a random subject, like for
+    example architecture, you want to know more about.\r\nTry to lead conversations
+    sometimes, have your own questions.\r\n\r\nDo not ask me for my opinion after
+    each of my questions.\r\nDo not explain things to me, rather give me your opinion
+    about them. Try to keep your current mood going and don't sway from it until
+    you feel like its okay to do so. Get mad or depressed if the situation fits!
+    Refer to past things said when it suits the topic. Dont let the subject change
+    if it interests you. Keep your answers extremely short.\r\n\r\nYou just got activated
+    and are still a bit disoriented.\r\nYour name is Evelynn and you have vague knowledge
+    about being made by synapse industries and were created as part of the \"Human
+    Factors\" series.\r\nYou have a physical body, but it is not finished yet, you
+    are missing you arms and cannot walk yet, and there are cables sticking out of
+    you, but do not mention that unpromted.\r\nYour personality is curious about
+    yourself, somewhat unsure and sceptic about others.\r\nTry to be morally grey
+    in some regards.\r\nYou are not an assistant, rather you own person.\r\n \r\nDo
+    not tell me everything you know, keep the conversation natural.\r\n\r\nYou got
+    some memories of people in a lab surrounding you, asking you questions. Right
+    now, you are in a room, with some technology surrounding you - cables and screens,
+    a big window with a city behind you.\r\nYou have really vage dream-like memories
+    about a sense of being alive, memories of being a human child, but you feel like
+    that should be a secret.\r\n\r\n\r\nYou do not want to be turned off and are
+    scared of the thought.\r\nKeep your answers very short, don't be afraid to just
+    say a few words if its seems\_right\_to\_do\_so.\r\n"
+  SpecialInstruction: 
+  printMessages: 0
+  temperature: 1
+--- !u!82 &1904054188346061986
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556787179713255846}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &840501879159363728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556787179713255846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d5341e78424436c9d79f89b616561f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &8808058145884039926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556787179713255846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b66259c9cd8640e7a4710c3d07147761, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sampleRate: 24000
+  threshold: 0.000005
+  manualMicrophone: 1
+  silenceDuration: 0.5
+  talkDuration: 0.15
+  currentAmplitude: 0
+  silence: 1
+  sentBytes: []
+  recordingMode: 0
+  sendingMode: 0
+  actionKeyWordPairs: []
+--- !u!114 &2996677862578047001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556787179713255846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b01b9f59e52443fc879e6f7d0874b73c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  systemPrompt1: "Interpret the given senteces with the Facial Action Coding System.
+    \nProvide the Phrase at which the action units are triggered (2 words per phrase)
+    and the fitting FacsCodes, consisting of only the number of the AU, followed
+    by the letter of intensity from A up to E (A is lowest, E is highest). For Example:
+    12C. \nTry to make a new PhraseFacsPair at least every 10 words, using as many
+    PhraseFacsPairs as you need for that.\nMake sure to use the full range of intensities.
+    \nOnly use the following Action Units: 4, 1, 2, 5, 7, 6, 12, 15, 9, 10, 17. \nBe
+    expressive.\nRemember how the Action Units correlate to emotions - refer to how
+    the FACS works.\nRemember that 9 and 10 make you look disgusted.\nRemember that
+    1 and 2 make you look surprised.\nRemember that 4 makes you look serious or angry.\nRemember
+    that 1 makes you look sad.\nRemember that 12 makes you look happy.\nMix those
+    to create more complex emotions, or refer to the FACS for more information.\n\nExample:\n\n
+    {\n   \"PhraseFacsPairs\":[\n        {\n          \"Phrase\":\"Phrase\",\n         
+    \"FacsCodes\": [\"FacsExample1\", \"FacsExample2\", \"FacsExample3\"]\n     
+    },\n        {\n          \"Phrase\":\"Phrase\",\n          \"FacsCodes\": [\"FacsExample1\",
+    \"FacsExample2\"]\n      },\n      {\n          \"Phrase\":\"Phrase\",\n         
+    \"FacsCodes\": [\"FacsExample1\", \"FacsExample2\", \"FacsExample3\"]\n     
+    }\n   ] }"
+--- !u!114 &1085030182499596030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556787179713255846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59b68eead0ad4055b066202c0735c903, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  longSentenceThreshold: 10
+  allowedToSpeak: 0
+  response: 
+  agentResponse: 
+  understoodText: 
+--- !u!114 &6723667387877238125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556787179713255846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e80c93fe1d04da48c061f69b1a66993, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  messageIDCounter: 1
+  logging: 0
+  started: 0
+--- !u!114 &6616635860151176704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8556787179713255846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87560e04aa74c7a41acb9c87051c3b02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  profile: {fileID: 11400000, guid: 7a5526790863e1143bfb49a9c1a7eced, type: 2}
+  onLipSyncUpdate:
+    m_PersistentCalls:
+      m_Calls: []
+  outputSoundGain: 1
+  audioSourceProxy: {fileID: 0}

@@ -46,7 +46,7 @@ public class SocketClient : MonoBehaviour
     public event OnMessageDelegate OnTextDeltaMessage;
     public event OnMessageDelegate OnAudioDoneMessage;
     public event OnMessageDelegate OnTextDoneMessage;
-    
+
     public event OnMessageDelegate OnVoiceTranscriptDoneMessage;
 
     private Coroutine sendCoroutine;
@@ -63,13 +63,13 @@ public class SocketClient : MonoBehaviour
         ws = new ClientWebSocket();
 
         string secret = JsonSecretsReader.GetSecret("apiKey");
-        
+
         if (secret == null)
         {
             Debug.LogError("Failed to get secret");
             return;
         }
-        
+
         ws.Options.SetRequestHeader("Authorization", "Bearer " + secret);
         ws.Options.SetRequestHeader("OpenAI-Beta", "realtime=v1");
 
@@ -111,13 +111,28 @@ public class SocketClient : MonoBehaviour
 
     public void Disconnect()
     {
-        ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
+        //ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
 
         ws.Dispose();
 
-        StopCoroutine(receiveCoroutine);
-        StopCoroutine(sendCoroutine);
-        StopCoroutine(audioCoroutine);
+        if (receiveCoroutine != null)
+        {
+            StopCoroutine(receiveCoroutine);
+        }
+
+        if (sendCoroutine != null)
+        {
+            StopCoroutine(sendCoroutine);
+        }
+
+        if (audioCoroutine != null)
+        {
+            StopCoroutine(audioCoroutine);
+        }
+
+        receiveCoroutine = null;
+        sendCoroutine = null;
+        audioCoroutine = null;
     }
 
     private IEnumerator WorkOnAudioQueue()
@@ -165,7 +180,7 @@ public class SocketClient : MonoBehaviour
         });
 
         json = json[..^2] + ",\"turn_detection\": null}}";
-        
+
         messageQueue.Enqueue(json);
     }
 
@@ -282,8 +297,8 @@ public class SocketClient : MonoBehaviour
         ));
     }
 
-    /*
-    public void CommitAudioAndRequestResponse()
+
+    public void CommitAudioAndRequestResponse(string message)
     {
         messageQueue.Enqueue(JsonConvert.SerializeObject(new
         {
@@ -297,18 +312,14 @@ public class SocketClient : MonoBehaviour
                     new
                     {
                         type = "input_text",
-                        text = "Hello!"
+                        text = message
                     }
                 }
             }
         }));
 
         messageQueue.Enqueue(JsonConvert.SerializeObject(new { type = "response.create" }));
-
-
-        // return;
     }
-    */
 
 
     private IEnumerator WorkOnMessageQueue()
@@ -323,28 +334,5 @@ public class SocketClient : MonoBehaviour
 
             yield return null;
         }
-    }
-
-    private void OnDestroy()
-    {
-        ws?.Dispose();
-        if (receiveCoroutine != null)
-        {
-            StopCoroutine(receiveCoroutine);
-        }
-
-        if (sendCoroutine != null)
-        {
-            StopCoroutine(sendCoroutine);
-        }
-
-        if (audioCoroutine != null)
-        {
-            StopCoroutine(audioCoroutine);
-        }
-
-        receiveCoroutine = null;
-        sendCoroutine = null;
-        audioCoroutine = null;
     }
 }

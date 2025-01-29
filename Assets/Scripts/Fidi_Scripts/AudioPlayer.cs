@@ -48,6 +48,11 @@ public class AudioPlayer : MonoBehaviour
         StopCoroutine(checkIfAudioDoneCoroutine);
         audioSource.Stop();
         audioClip = null;
+        
+        audioBuffer.Clear();
+        
+        startedPlaying = false;
+        
     }
 
 

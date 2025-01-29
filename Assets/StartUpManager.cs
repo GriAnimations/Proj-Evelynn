@@ -20,7 +20,7 @@ public class StartUpManager : MonoBehaviour
     [SerializeField] private QuestionManager questionManager;
     [SerializeField] private Animator animator;
     
-    [SerializeField] private ResponseManager responseManager;
+    private ResponseManager responseManager;
     
     // Start is called before the first frame update
     void Start()
@@ -63,7 +63,7 @@ public class StartUpManager : MonoBehaviour
     {
         questionManager.ToggleQuestions();
         wholeCanvas.SetActive(false);
-        responseManager.allowedToSpeak = true;
+        FindObjectOfType<ResponseManager>().allowedToSpeak = true;
     }
 
     public void ActivateItForReal()
