@@ -1,0 +1,20 @@
+i guess its not possible to display da names of da song playing….,. … … ………. …….
+
+CATEGORIES.
+-Calm:
+	"rain puddles" (calm_rainpuddles_standardmusic)
+	"snow in spring" - (ev_calm2)
+	"hollow" - (calm_hollow)
+	"waiting lobby" (calm_waitinglobby)
+
+- Jazzy:
+	"winter sun" - (jazzy_wintersun)
+	"evelynn but make it gta" (jazzy_evelynnbutmakeitgta)
+	"waitin´ (Acid Jazz)" (jazzy_waitin_acidjazz)
+	
+-Other:
+	"cybercoma" - (other_cybercoma)
+	"cyberrace" - funk/rock Fusion (other_cyberrace)
+
+
+

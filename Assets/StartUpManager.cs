@@ -19,6 +19,7 @@ public class StartUpManager : MonoBehaviour
     
     [SerializeField] private QuestionManager questionManager;
     [SerializeField] private Animator animator;
+    [SerializeField] private SoundManager soundManager;
     
     private ResponseManager responseManager;
     
@@ -30,6 +31,8 @@ public class StartUpManager : MonoBehaviour
 
     private IEnumerator FadeOutBlackBackGround()
     {
+        yield return new WaitForSeconds(0.8f);
+        soundManager.PlaySound(8);
         yield return new WaitForSeconds(fadeDuration);
         
         var elapsedTime = 0f;

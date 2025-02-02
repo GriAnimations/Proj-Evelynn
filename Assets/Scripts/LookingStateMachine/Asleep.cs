@@ -9,21 +9,28 @@ namespace LookingStateMachine
         public bool FranticLookAround;
 
         private bool _doneThat;
+        private bool _veryFirstTime;
         
         
         public override void EnterState(LookingStateManager looking)
         {
+            if (!_veryFirstTime)
+            {
+                _veryFirstTime = true;
+            }
+            else
+            {
+                looking.soundManager.PlaySound(7);
+            }
+            
             StillAsleep = true;
             _doneThat = false;
             FranticLookAround = false;
             looking.waitingDone = true;
-
-            var randomTime = Random.Range(2.8f, 3.2f);
             
             looking.lookingSpeed = Random.Range(0.2f, 0.35f);
             looking.ChoosePoint(0, Random.Range(0.5f, 0.7f));
             looking.StartSpecificMouth("Mouth_AH", Random.Range(1f, 2f), Random.Range(0.2f, 0.4f));
-            
             
             looking.InitiateShutDown();
         }
@@ -94,6 +101,8 @@ namespace LookingStateMachine
                 looking.StartSpecificEmotion(5, Random.Range(1f, 2f), Random.Range(0.5f, 1f));
                 
                 looking.StartBootUpSequence();
+                
+                looking.soundManager.PlaySound(1);
             }
         }
     }

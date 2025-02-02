@@ -12,6 +12,7 @@ public class QuestionManager : MonoBehaviour
     [SerializeField] private GameObject escapeButton;
     [SerializeField] private Animator animator;
     [SerializeField] private QuitGameManager quitGameManager;
+    [SerializeField] private SoundManager soundManager;
     
     public bool questionsDisplayed;
     
@@ -41,6 +42,7 @@ public class QuestionManager : MonoBehaviour
     private void SpawnQuestion()
     {
         animator.Play("UI Animation");
+        soundManager.PlayClickSound(6);
     }
 
     public void DisplayUI()
@@ -52,6 +54,7 @@ public class QuestionManager : MonoBehaviour
     private void DespawnQuestions()
     {
         animator.Play("UI Animation backwards");
+        soundManager.PlayClickSound(5);
     }
 
     public void HideUI()

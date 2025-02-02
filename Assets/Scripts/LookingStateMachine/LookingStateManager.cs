@@ -22,6 +22,7 @@ public class LookingStateManager : MonoBehaviour
     public EmotionManager emotionManager;
     [SerializeField] private BlinkingStuff blinkingStuff;
     [SerializeField] private BodyLanguage bodyLanguage;
+    public SoundManager soundManager;
 
     public bool mouthStuffOngoing;
 

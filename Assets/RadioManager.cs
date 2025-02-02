@@ -10,24 +10,30 @@ public class RadioManager : MonoBehaviour
     public float radioChannel;
 
     [SerializeField] private AudioSource whiteNoise;
-    [SerializeField] private AudioSource music;
-    [SerializeField] private AudioClip[] musicClips;
+    [SerializeField] private AudioSource channel1;
+    [SerializeField] private AudioSource channel2;
+    [SerializeField] private AudioSource channel3;
+    [SerializeField] private AudioClip[] musicClips1;
+    [SerializeField] private AudioClip[] musicClips2;
+    [SerializeField] private AudioClip[] musicClips3;
     
     [SerializeField] private Slider channelSlider;
     [SerializeField] private Slider volumeSlider;
     
     [SerializeField] private float[] crossFadePoints;
     [SerializeField] private float crossFadeThreshold = 0.15f;
+    public float maxWhiteNoiseVolume = 0.2f;
     
-    //public float maxVolume;
+    private int channel1Index = 0;
+    private int channel2Index = 0;
+    private int channel3Index = 0;
     
     private int _currentClipIndex;
 
     private void Start()
     {
-        volumeSlider.value = 0;
-        
         volumeSlider.onValueChanged.AddListener(v => volumeSlider.value = v);
+        StartCoroutine(VolumeUp());
     }
 
     private void Update()
@@ -36,30 +42,50 @@ public class RadioManager : MonoBehaviour
         {
             ChannelControl();
         }
+        CheckAndAdvanceChannel(channel1, musicClips1, ref channel1Index);
+        CheckAndAdvanceChannel(channel2, musicClips2, ref channel2Index);
+        CheckAndAdvanceChannel(channel3, musicClips3, ref channel3Index);
     }
 
+    private IEnumerator VolumeUp()
+    {
+        yield return new WaitForSeconds(5f);
+        float elapsedTime = 0;
+        while (elapsedTime <= 3f)
+        {
+            elapsedTime += Time.deltaTime;
+            var normalizedTime = Mathf.Clamp01(elapsedTime / 3f);
+            var preValue = Mathf.Lerp(0, 0.4f, normalizedTime);
+            
+            volumeSlider.value = preValue;
+
+            yield return null;
+        }
+    }
+    
     public void ChannelControl()
     {
-        var closestPointIndex = -1;
-        var closestDistance = float.MaxValue;
-
-        for (var i = 0; i < crossFadePoints.Length; i++)
+        var activations = new float[3];
+        var maxActivation = 0f;
+        for (var i = 0; i < 3; i++)
         {
             var distance = Mathf.Abs(channelSlider.value - crossFadePoints[i]);
-            if (!(distance < closestDistance)) continue;
-            closestDistance = distance;
-            closestPointIndex = i;
+            var activation = Mathf.Clamp01(1f - (distance / crossFadeThreshold));
+            activations[i] = activation;
+            if (activation > maxActivation)
+                maxActivation = activation;
         }
-        
-        var distanceToPoint = Mathf.Abs(channelSlider.value - crossFadePoints[closestPointIndex]);
-        var t = Mathf.Clamp01(1 - distanceToPoint / crossFadeThreshold);
+        channel1.volume = activations[0] * volumeSlider.value;
+        channel2.volume = activations[1] * volumeSlider.value;
+        channel3.volume = activations[2] * volumeSlider.value;
+        whiteNoise.volume = Mathf.Lerp(maxWhiteNoiseVolume, -0.5f, maxActivation);
+    }
 
-        whiteNoise.volume = Mathf.Lerp(volumeSlider.value/80, -0.1f, t);
-        music.volume = Mathf.Lerp(0, volumeSlider.value, t);
-
-        if (_currentClipIndex == closestPointIndex) return;
-        _currentClipIndex = closestPointIndex;
-        music.clip = musicClips[_currentClipIndex];
-        music.Play();
+    void CheckAndAdvanceChannel(AudioSource source, AudioClip[] clips, ref int index)
+    {
+        if (source.isPlaying) return;
+        index = (index + 1) % clips.Length;
+        source.clip = clips[index];
+        source.Play();
     }
 }
