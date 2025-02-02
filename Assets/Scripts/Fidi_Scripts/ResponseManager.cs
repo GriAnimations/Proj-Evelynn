@@ -439,16 +439,13 @@ public class ResponseManager : MonoBehaviour
     {
         audioPlayer.PlayAudio();
         //TODO Whatever you want to do with short sentences
-        Debug.Log("Short sentence");
         tvAnimator.Play("Anim_Talking");
     }
 
     private void LongSentence(float duration)
     {
         audioPlayer.PlayAudio(); // DO OTHER SHIT BEFORE THIS
-
         //TODO Whatever you want to do with long sentences
-        Debug.Log("Long sentence");
         tvAnimator.Play("Anim_Talking");
     }
 

@@ -96,7 +96,6 @@ public class OpenAiConnection : MonoBehaviour
                 {
                     var resultText = task.Result.Value.Content.FirstOrDefault()?.Text;
                     OnJobDone?.Invoke((jobId, resultText));
-                    Debug.LogWarning("Job done...");
                 }
 
                 client.SetInUse(false);
