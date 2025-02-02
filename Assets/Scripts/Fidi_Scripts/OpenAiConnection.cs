@@ -34,7 +34,7 @@ public class OpenAiConnection : MonoBehaviour
         "   ] " +
         "}";
 
-    private Queue<(ChatMessage[], Guid)> jobQueue = new();
+    private Queue<(ChatMessage[] messages, Guid id)> jobQueue = new();
 
     private Coroutine jobQueueCoroutine;
     private Coroutine jobDoneCoroutine;
@@ -43,7 +43,7 @@ public class OpenAiConnection : MonoBehaviour
 
     public event OnJobDoneDelegate OnJobDone;
 
-    public Dictionary<Guid, Task<ClientResult<ChatCompletion>>> tasks = new();
+    private Dictionary<Guid, (Task<ClientResult<ChatCompletion>> task, ChatClientCombo client)> tasks = new();
 
     private List<ChatClientCombo> clientsPool = new();
     private int maxClients = 10;
@@ -70,27 +70,39 @@ public class OpenAiConnection : MonoBehaviour
     public void Dispose()
     {
         StopJobQueue();
-        
     }
 
     private IEnumerator ProcessJobDone()
     {
         while (true)
         {
-            List<Guid> guids = new List<Guid>();
-
-            foreach (var task in tasks.Where(task => task.Value.IsCompleted))
+            var completedJobs = tasks.Where(t => t.Value.task.IsCompleted).ToList();
+            foreach (var job in completedJobs)
             {
-                OnJobDone?.Invoke((task.Key, task.Value.Result.Value.Content[0].Text));
-                Debug.LogWarning("Job done...");
-                guids.Add(task.Key);
+                Guid jobId = job.Key;
+                var (task, client) = job.Value;
+
+                if (task.IsFaulted)
+                {
+                    Debug.LogError($"Job {jobId} encountered an error: {task.Exception}");
+                    OnJobDone?.Invoke((jobId, "Error in job execution"));
+                }
+                else if (task.IsCanceled)
+                {
+                    Debug.LogError($"Job {jobId} was canceled.");
+                    OnJobDone?.Invoke((jobId, "Job canceled"));
+                }
+                else
+                {
+                    var resultText = task.Result.Value.Content.FirstOrDefault()?.Text;
+                    OnJobDone?.Invoke((jobId, resultText));
+                    Debug.LogWarning("Job done...");
+                }
+
+                client.SetInUse(false);
+                tasks.Remove(jobId);
             }
 
-            foreach (var guid in guids)
-            {
-                tasks.Remove(guid);
-            }
-            
             yield return new WaitForSeconds(0.05f);
         }
     }
@@ -106,11 +118,12 @@ public class OpenAiConnection : MonoBehaviour
                 if (client != null)
                 {
                     var job = jobQueue.Dequeue();
-                    tasks.Add(job.Item2, client.client.CompleteChatAsync(job.Item1));
+                    var chatTask = client.client.CompleteChatAsync(job.messages);
+                    tasks.Add(job.id, (chatTask, client));
                 }
                 else
                 {
-                    Debug.LogError("No available clients");
+                    Debug.LogWarning("No available clients");
                 }
             }
 
@@ -120,7 +133,7 @@ public class OpenAiConnection : MonoBehaviour
 
     public ChatClientCombo GetUnusedClient()
     {
-        ChatClientCombo client = clientsPool.FirstOrDefault(client => !client.inUse);
+        ChatClientCombo client = clientsPool.FirstOrDefault(c => !c.inUse);
 
         if (client != null)
         {
@@ -129,6 +142,7 @@ public class OpenAiConnection : MonoBehaviour
         else if (clientsPool.Count < maxClients)
         {
             client = new ChatClientCombo(gptModel);
+            client.SetInUse(true);
             clientsPool.Add(client);
         }
         else
@@ -139,23 +153,19 @@ public class OpenAiConnection : MonoBehaviour
         return client;
     }
 
-
+    // Adds a job using the default system prompt.
     public void AddJob(string job, Guid id)
     {
-        ChatMessage message = ChatMessage.CreateSystemMessage(systemPrompt1);
-
+        ChatMessage systemMessage = ChatMessage.CreateSystemMessage(systemPrompt1);
         ChatMessage userMessage = ChatMessage.CreateUserMessage(job);
-
-        jobQueue.Enqueue((new[] { message, userMessage }, id));
+        jobQueue.Enqueue((new[] { systemMessage, userMessage }, id));
     }
 
     public void AddJob(string systemPrompt, string job, Guid id)
     {
-        ChatMessage message = ChatMessage.CreateSystemMessage(systemPrompt);
-
+        ChatMessage systemMessage = ChatMessage.CreateSystemMessage(systemPrompt);
         ChatMessage userMessage = ChatMessage.CreateUserMessage(job);
-
-        jobQueue.Enqueue((new[] { message, userMessage }, id));
+        jobQueue.Enqueue((new[] { systemMessage, userMessage }, id));
     }
 
     public void StopJobQueue()
@@ -191,15 +201,13 @@ public class ChatClientCombo
     public ChatClientCombo(string gptModel)
     {
         string secret = JsonSecretsReader.GetSecret("apiKey");
-        
         if (secret == null)
         {
             Debug.LogError("No API key found");
             return;
         }
-        
-        client = new OpenAIClient(secret)
-            .GetChatClient(gptModel);
+
+        client = new OpenAIClient(secret).GetChatClient(gptModel);
         id = Guid.NewGuid();
         inUse = false;
     }
