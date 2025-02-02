@@ -18,22 +18,22 @@ public class RadioManager : MonoBehaviour
     [SerializeField] private AudioClip[] musicClips1;
     [SerializeField] private AudioClip[] musicClips2;
     [SerializeField] private AudioClip[] musicClips3;
-    
+
     [SerializeField] private Slider channelSlider;
     [SerializeField] private Slider volumeSlider;
-    
+
     [SerializeField] private float[] crossFadePoints;
     [SerializeField] private float crossFadeThreshold = 0.15f;
     public float maxWhiteNoiseVolume = 0.2f;
 
     [SerializeField] private Material radioImageMat;
-    
+
     private int channel1Index = 0;
     private int channel2Index = 0;
     private int channel3Index = 0;
-    
+
     private int _currentClipIndex;
-    
+
     private SocketClient _socketClient;
 
     private void Start()
@@ -45,7 +45,7 @@ public class RadioManager : MonoBehaviour
     private void Update()
     {
         if (Time.frameCount % 10 != 0) return;
-        
+
         ChannelControl();
         CheckAndAdvanceChannel(channel1, musicClips1, ref channel1Index);
         CheckAndAdvanceChannel(channel2, musicClips2, ref channel2Index);
@@ -61,13 +61,13 @@ public class RadioManager : MonoBehaviour
             elapsedTime += Time.deltaTime;
             var normalizedTime = Mathf.Clamp01(elapsedTime / 3f);
             var preValue = Mathf.Lerp(0, 0.4f, normalizedTime);
-            
+
             volumeSlider.value = preValue;
 
             yield return null;
         }
     }
-    
+
     public void ChannelControl()
     {
         var activations = new float[3];
@@ -80,34 +80,14 @@ public class RadioManager : MonoBehaviour
             if (activation > maxActivation)
                 maxActivation = activation;
         }
+
         channel1.volume = activations[0] * volumeSlider.value;
         channel2.volume = activations[1] * volumeSlider.value;
         channel3.volume = activations[2] * volumeSlider.value;
         whiteNoise.volume = Mathf.Lerp(maxWhiteNoiseVolume, -0.5f, maxActivation);
-        
-        radioImageMat.SetFloat(Property, whiteNoise.volume*2);
-        radioImageMat.SetFloat(Property1, whiteNoise.volume*2);
 
-        //if (channel1.volume > 0.1f)
-        //{
-        //    _socketClient = FindObjectOfType<SocketClient>();
-        //    _socketClient.AddSpecialInstruction("There is a radio, currently playing calm music");
-        //}
-        //else if (channel2.volume > 0.1f)
-        //{
-        //    _socketClient = FindObjectOfType<SocketClient>();
-        //    _socketClient.AddSpecialInstruction("There is a radio, currently playing jazzy music");
-        //}
-        //else if (channel3.volume > 0.1f)
-        //{
-        //    _socketClient = FindObjectOfType<SocketClient>();
-        //    _socketClient.AddSpecialInstruction("There is a radio, currently playing funky techno music");
-        //}
-        //else
-        //{
-        //    _socketClient = FindObjectOfType<SocketClient>();
-        //    _socketClient.AddSpecialInstruction("There is a radio, currently playing static white-noise");
-        //}
+        radioImageMat.SetFloat(Property, whiteNoise.volume * 2);
+        radioImageMat.SetFloat(Property1, whiteNoise.volume * 2);
     }
 
     void CheckAndAdvanceChannel(AudioSource source, AudioClip[] clips, ref int index)
