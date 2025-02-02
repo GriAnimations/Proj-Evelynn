@@ -12,7 +12,8 @@ public class QuitGameManager : MonoBehaviour
     [SerializeField] private GameObject bgImage;
 
     public bool quitGDisplayed;
-
+    
+    private ResponseManager _responseManager;
 
     private void Update()
     {
@@ -47,6 +48,9 @@ public class QuitGameManager : MonoBehaviour
         quitGDisplayed = true;
         bgImage.SetActive(true);
         StartCoroutine(FadeBlack());
+        
+        _responseManager = FindObjectOfType<ResponseManager>();
+        _responseManager.ShutDownWarning();
     }
 
     private IEnumerator FadeBlack()

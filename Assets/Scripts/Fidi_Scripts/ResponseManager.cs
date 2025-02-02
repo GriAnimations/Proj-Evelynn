@@ -114,11 +114,11 @@ public class ResponseManager : MonoBehaviour
                 StopMicrophone();
             }
         }
+    }
 
-        if (Input.GetKeyDown(KeyCode.R))//TODO GERALD 
-        {
-            socketClient.CommitAudioAndRequestResponse("You are being turned off now, and you will perish");
-        }
+    public void ShutDownWarning()
+    {
+        socketClient.CommitAudioAndRequestResponse("You are being turned off now, act quickly");
     }
 
 

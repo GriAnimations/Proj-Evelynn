@@ -7,6 +7,8 @@ using UnityEngine.UI;
 
 public class RadioManager : MonoBehaviour
 {
+    private static readonly int Property = Shader.PropertyToID("_DispIntensity");
+    private static readonly int Property1 = Shader.PropertyToID("_ColorIntensity");
     public float radioChannel;
 
     [SerializeField] private AudioSource whiteNoise;
@@ -23,12 +25,16 @@ public class RadioManager : MonoBehaviour
     [SerializeField] private float[] crossFadePoints;
     [SerializeField] private float crossFadeThreshold = 0.15f;
     public float maxWhiteNoiseVolume = 0.2f;
+
+    [SerializeField] private Material radioImageMat;
     
     private int channel1Index = 0;
     private int channel2Index = 0;
     private int channel3Index = 0;
     
     private int _currentClipIndex;
+    
+    private SocketClient _socketClient;
 
     private void Start()
     {
@@ -38,10 +44,9 @@ public class RadioManager : MonoBehaviour
 
     private void Update()
     {
-        if (Time.frameCount % 10 == 0)
-        {
-            ChannelControl();
-        }
+        if (Time.frameCount % 10 != 0) return;
+        
+        ChannelControl();
         CheckAndAdvanceChannel(channel1, musicClips1, ref channel1Index);
         CheckAndAdvanceChannel(channel2, musicClips2, ref channel2Index);
         CheckAndAdvanceChannel(channel3, musicClips3, ref channel3Index);
@@ -70,7 +75,7 @@ public class RadioManager : MonoBehaviour
         for (var i = 0; i < 3; i++)
         {
             var distance = Mathf.Abs(channelSlider.value - crossFadePoints[i]);
-            var activation = Mathf.Clamp01(1f - (distance / crossFadeThreshold));
+            var activation = Mathf.Clamp01(1f - distance / crossFadeThreshold);
             activations[i] = activation;
             if (activation > maxActivation)
                 maxActivation = activation;
@@ -79,6 +84,30 @@ public class RadioManager : MonoBehaviour
         channel2.volume = activations[1] * volumeSlider.value;
         channel3.volume = activations[2] * volumeSlider.value;
         whiteNoise.volume = Mathf.Lerp(maxWhiteNoiseVolume, -0.5f, maxActivation);
+        
+        radioImageMat.SetFloat(Property, whiteNoise.volume*2);
+        radioImageMat.SetFloat(Property1, whiteNoise.volume*2);
+
+        //if (channel1.volume > 0.1f)
+        //{
+        //    _socketClient = FindObjectOfType<SocketClient>();
+        //    _socketClient.AddSpecialInstruction("There is a radio, currently playing calm music");
+        //}
+        //else if (channel2.volume > 0.1f)
+        //{
+        //    _socketClient = FindObjectOfType<SocketClient>();
+        //    _socketClient.AddSpecialInstruction("There is a radio, currently playing jazzy music");
+        //}
+        //else if (channel3.volume > 0.1f)
+        //{
+        //    _socketClient = FindObjectOfType<SocketClient>();
+        //    _socketClient.AddSpecialInstruction("There is a radio, currently playing funky techno music");
+        //}
+        //else
+        //{
+        //    _socketClient = FindObjectOfType<SocketClient>();
+        //    _socketClient.AddSpecialInstruction("There is a radio, currently playing static white-noise");
+        //}
     }
 
     void CheckAndAdvanceChannel(AudioSource source, AudioClip[] clips, ref int index)
