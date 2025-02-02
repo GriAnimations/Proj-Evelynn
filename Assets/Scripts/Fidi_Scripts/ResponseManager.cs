@@ -86,6 +86,7 @@ public class ResponseManager : MonoBehaviour
     private void Start()
     {
         resetButton.interactable = false;
+        allowedToSpeak = false;
         StartSession();
     }
 
@@ -187,6 +188,7 @@ public class ResponseManager : MonoBehaviour
         }
 
         Debug.LogWarning("Initialized");
+        resetButton.interactable = true;
     }
 
     private IEnumerator WaitForAllReady()
@@ -357,7 +359,7 @@ public class ResponseManager : MonoBehaviour
 
     public void StartMicrophone()
     {
-        resetButton.interactable = false;
+        //resetButton.interactable = false;
         audioRecorder.StartRecordingMode();
 
         tvAnimator.Play("Anim_Record");
@@ -460,11 +462,8 @@ public class ResponseManager : MonoBehaviour
         StartMicrophone();
         lookingStateManager.SwitchState(lookingStateManager.AttentionState);
         allowedToSpeak = true;
+        Debug.Log("its in the audio done");
         tvAnimator.Play("Anim_Talk");
-        if (!lookingStateManager.AsleepState.StillAsleep)
-        {
-            resetButton.interactable = true;
-        }
     }
 
     private void CalculateFacsStuff((Guid id, string result) job)

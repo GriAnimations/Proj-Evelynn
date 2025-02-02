@@ -23,6 +23,8 @@ namespace LookingStateMachine
                 looking.soundManager.PlaySound(7);
             }
             
+            looking.resetButton.interactable = false;
+            
             StillAsleep = true;
             _doneThat = false;
             FranticLookAround = false;

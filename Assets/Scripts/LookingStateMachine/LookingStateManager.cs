@@ -5,6 +5,8 @@ using Live2D.Cubism.Core;
 using LookingStateMachine;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UIElements;
+using Button = UnityEngine.UI.Button;
 using Random = UnityEngine.Random;
 
 public class LookingStateManager : MonoBehaviour
@@ -23,6 +25,7 @@ public class LookingStateManager : MonoBehaviour
     [SerializeField] private BlinkingStuff blinkingStuff;
     [SerializeField] private BodyLanguage bodyLanguage;
     public SoundManager soundManager;
+    public Button resetButton;
 
     public bool mouthStuffOngoing;
 
@@ -56,6 +59,8 @@ public class LookingStateManager : MonoBehaviour
 
     public bool automaticHead;
     public bool wasJustBored;
+
+    private bool _veryFirstTime;
 
     float FinalHeadY(float input)
     {
@@ -414,8 +419,9 @@ public class LookingStateManager : MonoBehaviour
             yield return null;
         }
 
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(1f);
         automaticHead = true;
+        resetButton.interactable = true;
     }
 
     public void InitiateShutDown()
@@ -510,7 +516,15 @@ public class LookingStateManager : MonoBehaviour
         EaseEmotions(-1f);
         yield return new WaitForSeconds(2f);
         automaticHead = true;
-        responseManager.allowedToSpeak = true;
+        
+        if (!_veryFirstTime)
+        {
+            _veryFirstTime = true;
+        }
+        else
+        {
+            responseManager.allowedToSpeak = true;
+        }
     }
 
     public void Wait(float time)

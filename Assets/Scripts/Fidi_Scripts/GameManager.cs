@@ -87,9 +87,9 @@ namespace Fidi_Scripts
             Destroy(responseManager);
         }
 
-        public IEnumerator SetAllowSpeaking()
+        private IEnumerator SetAllowSpeaking()
         {
-            yield return new WaitForSeconds(2.5f);
+            yield return new WaitForSeconds(3.5f);
             FindObjectOfType<ResponseManager>().allowedToSpeak = true;
         }
     }
