@@ -428,6 +428,8 @@ public class LookingStateManager : MonoBehaviour
 
     private IEnumerator ShutDown()
     {
+        var responseManager = FindObjectOfType<ResponseManager>();
+        responseManager.allowedToSpeak = false;
         automaticHead = false;
         var currentShock = bodyLanguage.shockIncrease;
         var currentHeadY = live2DModel.Parameters[28].Value;
@@ -506,8 +508,9 @@ public class LookingStateManager : MonoBehaviour
         }
         
         EaseEmotions(-1f);
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(2f);
         automaticHead = true;
+        responseManager.allowedToSpeak = true;
     }
 
     public void Wait(float time)

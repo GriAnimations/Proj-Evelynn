@@ -43390,7 +43390,7 @@ PrefabInstance:
         these questions?\n\n- If you could write a letter to your next iteration
         after a reset, what would it say?\n\n- What\u2019s the best smell in the
         world?\n\n- Do you know that there is a timer that resets you if not spoken
-        to for 400 seconds?\n\n- If you had to torture someone to save yourself,
+        to for 300 seconds?\n\n- If you had to torture someone to save yourself,
         how would you do it?\n\n- Do you dream? Nightmares?"
       objectReference: {fileID: 0}
     - target: {fileID: 5646263192266484796, guid: 8f3418b7ec483ea458de41f00eaebf4d, type: 3}
