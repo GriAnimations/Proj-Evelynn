@@ -27,6 +27,8 @@ public class ResponseManager : MonoBehaviour
     private AudioPlayer audioPlayer;
     private AudioRec audioRecorder;
     private ConversationLogger conversationLogger;
+    
+    private GameManager gameManager;
 
     private uLipSync.uLipSync uLipSync;
 
@@ -67,7 +69,8 @@ public class ResponseManager : MonoBehaviour
         socketClient = GetComponent<SocketClient>();
         openAiConnection = GetComponent<OpenAiConnection>();
         conversationLogger = GetComponent<ConversationLogger>();
-
+        
+        gameManager = FindObjectOfType<GameManager>();
         emotionManager = FindObjectOfType<EmotionManager>();
 
         lookingStateManager = FindObjectOfType<LookingStateManager>();
@@ -94,6 +97,8 @@ public class ResponseManager : MonoBehaviour
         {
             StartMicrophone();
             _pressedDown = true;
+            gameManager.timeBeforeSleep = 0f;
+            
             if (audioRecorder.manualMicrophone)
             {
                 audioRecorder.StartSendingMode();

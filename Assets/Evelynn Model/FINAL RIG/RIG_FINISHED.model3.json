@@ -1,0 +1,23 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "RIG_FINISHED.moc3",
+		"Textures": [
+			"RIG_FINISHED.8192/texture_00.png"
+		],
+		"Physics": "RIG_FINISHED.physics3.json",
+		"DisplayInfo": "RIG_FINISHED.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}

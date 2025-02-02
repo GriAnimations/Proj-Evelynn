@@ -6,6 +6,8 @@ namespace Fidi_Scripts
 {
     public class GameManager : MonoBehaviour
     {
+
+        public float timeBeforeSleep;
         // Singleton pattern
 
         private void Awake()
@@ -17,6 +19,7 @@ namespace Fidi_Scripts
 
             CreateResponseManager();
             DontDestroyOnLoad(gameObject);
+            StartCoroutine(MustHaveDrivenOff());
         }
 
         [SerializeField] private GameObject OideDreckschleidan;
@@ -45,6 +48,23 @@ namespace Fidi_Scripts
             Destroy(responseManager);
 
             StartCoroutine(CreateAfterDelay());
+        }
+
+        private IEnumerator MustHaveDrivenOff()
+        {
+            while (true)
+            {
+                while (timeBeforeSleep < 300f)
+                {
+                    timeBeforeSleep += Time.deltaTime;
+                    yield return null;
+                }
+            
+                ResetResponseManager();
+                
+                timeBeforeSleep = 0f;
+                yield return null;
+            }
         }
 
         private IEnumerator CreateAfterDelay()

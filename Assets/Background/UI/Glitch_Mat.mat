@@ -35,11 +35,11 @@ Material:
     - PixelSnap: 0
     - _ColorGlitchOn: 1
     - _ColorIntensity: 0
-    - _ColorProbability: 0.2
+    - _ColorProbability: 0.5
     - _DispGlitchOn: 1
     - _DispIntensity: 0
-    - _DispProbability: 0.2
-    - _GlitchInterval: 0.06
+    - _DispProbability: 0.5
+    - _GlitchInterval: 0.02
     - _WrapDispCoords: 1
     m_Colors:
     - _Color: {r: 0.3605197, g: 0.7239082, b: 0.7735849, a: 1}

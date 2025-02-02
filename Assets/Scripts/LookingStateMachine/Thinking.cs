@@ -41,7 +41,7 @@ namespace LookingStateMachine
                     looking.ChoosePoint(Random.Range(0.1f, -0.1f), Random.Range(0.2f, -0.2f));
                     looking.StartSpecificMouth("Mouth_AH", Random.Range(2f, 2.5f), Random.Range(0.1f, 0.3f));
                     
-                    looking.StartCoroutine(WaitForAction(Random.Range(4f, 5f)));
+                    looking.StartCoroutine(WaitForAction(Random.Range(6f, 8f)));
                     break;
                 case 2:
                     looking.dartingSpeedUpperEnd = 1f;
@@ -55,7 +55,7 @@ namespace LookingStateMachine
                     looking.StartSpecificBody(45, Random.Range(-0.15f, 0.15f), Random.Range(1f, 3f));
                     looking.StartSpecificBody(46, Random.Range(-0.1f, 0.1f), Random.Range(1f, 3f));
                     
-                    looking.StartCoroutine(WaitForAction(Random.Range(4f, 5f)));
+                    looking.StartCoroutine(WaitForAction(Random.Range(6f, 8f)));
                     break;
                 case 3:
                     looking.dartingSpeedUpperEnd = 1f;
@@ -70,7 +70,7 @@ namespace LookingStateMachine
                     looking.StartSpecificBody(45, Random.Range(-0.15f, 0.15f), Random.Range(1f, 3f));
                     looking.StartSpecificBody(46, Random.Range(-0.1f, 0.1f), Random.Range(1f, 3f));
                     
-                    looking.StartCoroutine(WaitForAction(Random.Range(4f, 5f)));
+                    looking.StartCoroutine(WaitForAction(Random.Range(6f, 8f)));
                     break;
             }
         }
